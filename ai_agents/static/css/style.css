@@ -1,38 +1,64 @@
 /* static/css/style.css */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
+/* UPDATED: Import Poppins font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --bg-color: #1a1a1d; /* Dark background */
-    --bg-gradient: linear-gradient(135deg, #1a1a1d 0%, #2c2c31 100%); /* Subtle gradient */
-    --glass-bg: rgba(44, 44, 49, 0.6); /* Semi-transparent dark glass */
-    --glass-border: rgba(255, 255, 255, 0.1); /* Subtle light border for glass */
-    --text-color: #e0e0e0; /* Light text */
-    --text-muted-color: #a0a0a0; /* Muted text */
-    --primary-color: #00aaff; /* Accent color (adjust as needed) */
+    /* ... (variables remain the same) ... */
+    --bg-color: #1a1a1d; /* Dark fallback color */
+    --glass-bg: rgba(44, 44, 49, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-color: #e0e0e0;
+    --text-muted-color: #a0a0a0;
+    --primary-color: #00aaff;
     --primary-hover-color: #0088cc;
-    --border-radius: 12px; /* Consistent rounded corners */
+    --border-radius: 8px;
     --shadow-color: rgba(0, 0, 0, 0.3);
+    --glow-color: rgba(0, 170, 255, 0.7);
+    --glow-spread: 5px;
+}
+
+html {
+    height: 100%;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-color);
-    background-image: var(--bg-gradient); /* Apply gradient */
-    /* Optional: Subtle noise texture */
-    /* background-image: var(--bg-gradient), url('data:image/svg+xml,...'); */
+    font-family: 'Poppins', sans-serif;
     color: var(--text-color);
-    min-height: 100vh;
+    min-height: 100%;
     display: flex;
     flex-direction: column;
     line-height: 1.6;
+    margin: 0;
+
+    /* --- UPDATED BACKGROUND --- */
+    /* Remove or comment out old background properties */
+    /* background-color: var(--bg-color); */
+    /* background-image: var(--bg-gradient); */
+
+    /* Add your background image */
+    background-image: url('/static/images/bg.jpg'); /* <-- CHANGE FILENAME */
+
+    /* Control how the background image behaves */
+    background-size: cover; /* Scale image to cover the entire area */
+    background-position: center center; /* Center the image */
+    background-repeat: no-repeat; /* Do not tile the image */
+    background-attachment: fixed; /* Keep background fixed during scroll */
+
+    /* Add a fallback background color in case the image fails to load */
+    background-color: var(--bg-color);
+    /* --- END UPDATED BACKGROUND --- */
 }
+
+/* ... (rest of the CSS remains the same) ... */
 
 /* Main content area */
 main {
-    flex-grow: 1; /* Ensures footer stays at the bottom */
-    padding-top: 80px; /* Adjust based on navbar height */
+    flex-grow: 1;
+    padding-top: 80px;
     padding-bottom: 4rem;
+    /* Add a subtle overlay to ensure text readability over background */
+    background-color: rgba(26, 26, 29, 0.5); /* Semi-transparent overlay */
 }
 
 /* Glassmorphism Effect Utility Class */
@@ -40,13 +66,13 @@ main {
     background: var(--glass-bg);
     border-radius: var(--border-radius);
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(10px); /* The key effect */
-    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 4px 30px var(--shadow-color);
-    padding: 2rem; /* Default padding */
+    padding: 2rem;
 }
 
-/* Navbar Styling */
+/* --- Navbar Styling (Remains mostly the same) --- */
 .navbar.glass-navbar {
     background: var(--glass-bg);
     border-bottom: 1px solid var(--glass-border);
@@ -55,78 +81,45 @@ main {
     box-shadow: 0 2px 15px var(--shadow-color);
     padding-top: 0.8rem;
     padding-bottom: 0.8rem;
-    position: fixed; /* Make navbar fixed */
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1030; /* Ensure it's above other content */
+    z-index: 1030;
 }
-
-.navbar.glass-navbar .navbar-brand {
-    color: var(--text-color);
-    font-weight: 500;
-}
-
-.navbar.glass-navbar .nav-link {
-    color: var(--text-muted-color);
-    transition: color 0.3s ease;
-}
-
-.navbar.glass-navbar .nav-link:hover,
-.navbar.glass-navbar .nav-link.active {
-    color: var(--text-color);
-}
-
-.navbar.glass-navbar .navbar-toggler {
-    border-color: var(--glass-border);
-}
-
-.navbar.glass-navbar .navbar-toggler-icon {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(224, 224, 224, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-}
-
-/* Dropdown Menu Styling */
-.navbar.glass-navbar .dropdown-menu {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--border-radius);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px var(--shadow-color);
-    padding: 0.5rem 0;
-}
-
-.navbar.glass-navbar .dropdown-item {
-    color: var(--text-muted-color);
-    padding: 0.5rem 1.5rem;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.navbar.glass-navbar .dropdown-item:hover,
-.navbar.glass-navbar .dropdown-item:focus {
-    background-color: rgba(255, 255, 255, 0.05); /* Subtle hover */
-    color: var(--text-color);
-}
-
-.navbar.glass-navbar .dropdown-divider {
-    border-top: 1px solid var(--glass-border);
-}
+.navbar.glass-navbar .navbar-brand { color: var(--text-color); font-weight: 500; }
+.navbar.glass-navbar .nav-link { color: var(--text-muted-color); transition: color 0.3s ease; }
+.navbar.glass-navbar .nav-link:hover, .navbar.glass-navbar .nav-link.active { color: var(--text-color); }
+.navbar.glass-navbar .navbar-toggler { border-color: var(--glass-border); }
+.navbar.glass-navbar .navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(224, 224, 224, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); }
+.navbar.glass-navbar .dropdown-menu { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--border-radius); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 4px 15px var(--shadow-color); padding: 0.5rem 0; }
+.navbar.glass-navbar .dropdown-item { color: var(--text-muted-color); padding: 0.5rem 1.5rem; transition: background-color 0.2s ease, color 0.2s ease; }
+.navbar.glass-navbar .dropdown-item:hover, .navbar.glass-navbar .dropdown-item:focus { background-color: rgba(255, 255, 255, 0.05); color: var(--text-color); }
+.navbar.glass-navbar .dropdown-divider { border-top: 1px solid var(--glass-border); }
+/* --- End Navbar Styling --- */
 
 
-/* Form Styling */
+/* --- Form Styling (UPDATED) --- */
 .form-control {
-    background-color: rgba(255, 255, 255, 0.05); /* Very subtle background */
+    background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);
     color: var(--text-color);
-    border-radius: calc(var(--border-radius) * 0.6); /* Slightly smaller radius */
+    border-radius: var(--border-radius);
     padding: 0.75rem 1rem;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    /* UPDATED: Added transition */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
+/* Make inputs slightly larger if using form-control-lg */
+.form-control-lg {
+    padding: 0.9rem 1.1rem;
+    font-size: 1.1rem;
+}
+
 
 .form-control:focus {
     background-color: rgba(255, 255, 255, 0.08);
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(0, 170, 255, 0.25); /* Use primary color for focus */
+    box-shadow: 0 0 0 0.2rem rgba(0, 170, 255, 0.25);
     color: var(--text-color);
 }
 
@@ -135,36 +128,67 @@ main {
     opacity: 0.7;
 }
 
-.form-label {
+/* Hide the default labels when looping manually */
+/* form p label { display: none; } */ /* Commented out - manual loop doesn't render <p> tags */
+
+/* Style help text and errors generated manually */
+.form-field-wrapper .form-text { /* Target help text within our wrapper */
+    font-size: 0.85em;
     color: var(--text-muted-color);
+    margin-top: 0.25rem;
     margin-bottom: 0.5rem;
 }
+.form-field-wrapper .invalid-feedback { /* Target error messages */
+    font-size: 0.85em;
+    color: #dc3545; /* Bootstrap danger color for errors */
+    margin-top: 0.25rem;
+}
+/* Ensure invalid feedback is shown when needed */
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+.form-control.is-invalid:focus {
+     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
 
-/* Button Styling */
+
+/* --- End Form Styling --- */
+
+
+/* --- Button Styling (UPDATED) --- */
 .btn {
-    border-radius: calc(var(--border-radius) * 0.6);
+    border-radius: var(--border-radius); /* Updated radius */
     padding: 0.75rem 1.5rem;
     font-weight: 500;
-    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.1s ease;
+    transition: all 0.3s ease; /* Transition all properties */
+    position: relative; /* Needed for potential pseudo-elements */
+    overflow: hidden; /* Hide overflow for effects */
+    border: 1px solid transparent; /* Start with transparent border */
+    box-shadow: none; /* Remove default bootstrap shadows if any */
 }
 
 .btn:active {
-     transform: translateY(1px); /* Subtle press effect */
+     transform: translateY(1px);
 }
 
+/* Primary Button */
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
-    color: #ffffff; /* Ensure contrast */
+    color: #ffffff;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
     background-color: var(--primary-hover-color);
     border-color: var(--primary-hover-color);
-    box-shadow: 0 0 0 0.2rem rgba(0, 170, 255, 0.3);
+    color: #ffffff;
+    /* Edge lightning/glow effect */
+    box-shadow: 0 0 var(--glow-spread) var(--glow-color),
+                0 0 calc(var(--glow-spread) * 2) var(--glow-color);
 }
 
+/* Secondary Button */
 .btn-secondary {
     background-color: rgba(255, 255, 255, 0.1);
     border-color: var(--glass-border);
@@ -174,81 +198,178 @@ main {
 .btn-secondary:hover,
 .btn-secondary:focus {
     background-color: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3); /* Make border slightly more visible on hover */
     color: var(--text-color);
-    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+     /* Edge lightning/glow effect for secondary */
+    box-shadow: 0 0 var(--glow-spread) rgba(255, 255, 255, 0.3), /* White glow */
+                0 0 calc(var(--glow-spread) * 2) rgba(255, 255, 255, 0.2);
+}
+/* --- End Button Styling --- */
+
+
+/* --- Alert Styling (Remains the same) --- */
+.alert { border-radius: var(--border-radius); border: 1px solid transparent; color: var(--text-color); }
+.alert-success { background-color: rgba(25, 135, 84, 0.3); border-color: rgba(25, 135, 84, 0.5); color: #d1e7dd; }
+.alert-info { background-color: rgba(13, 202, 240, 0.3); border-color: rgba(13, 202, 240, 0.5); color: #cff4fc; }
+.alert-warning { background-color: rgba(255, 193, 7, 0.3); border-color: rgba(255, 193, 7, 0.5); color: #fff3cd; }
+.alert-danger, .alert-error { background-color: rgba(220, 53, 69, 0.3); border-color: rgba(220, 53, 69, 0.5); color: #f8d7da; }
+/* --- End Alert Styling --- */
+
+
+/* --- Footer Styling (Remains the same) --- */
+.footer { background-color: transparent; padding: 1.5rem 0; color: var(--text-muted-color); font-size: 0.9rem; margin-top: auto; border-top: 1px solid var(--glass-border); }
+/* --- End Footer Styling --- */
+
+
+/* --- Homepage Specific Styles (UPDATED) --- */
+.hero-section {
+    min-height: 70vh; /* Give more space */
+    display: flex;
+    align-items: center;
 }
 
-/* Alert Styling */
-.alert {
+/* --- Homepage Specific Styles (UPDATED) --- */
+.hero-section {
+    min-height: 70vh; /* Give more space */
+    display: flex;
+    align-items: center;
+}
+
+/* UPDATED: Renamed class from .lottie-container */
+/* Container for the image */
+.image-container {
+    /* background-color: rgba(255, 255, 255, 0.03); */ /* Optional: remove bg if panel has it */
+    /* border: 1px solid var(--glass-border); */ /* Optional: remove border if panel has it */
     border-radius: var(--border-radius);
-    border: 1px solid transparent;
-}
-.alert-danger {
-    background-color: rgba(220, 53, 69, 0.3); /* Red with transparency */
-    border-color: rgba(220, 53, 69, 0.5);
-    color: #f8d7da; /* Light red text */
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    overflow: hidden; /* Crucial: Prevents large images from overflowing */
+    padding: 0; /* Remove padding if inside panel */
 }
 
-/* Footer Styling */
+/* Style for the single hero panel */
+.hero-panel {
+    padding: 2rem 1rem; /* Adjust padding */
+}
+@media (min-width: 992px) {
+    .hero-panel {
+        padding: 3rem; /* More padding on larger screens */
+    }
+    /* UPDATED: Renamed class */
+    .hero-panel .image-container {
+         min-height: 350px; /* Ensure enough height */
+    }
+}
+
+
+/* Login/Register Card Styling */
+.auth-card {
+    max-width: 650px;
+    margin: 3rem auto; /* More margin */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+    main { padding-top: 70px; }
+    .hero-section { text-align: center; }
+    .lottie-container { margin-top: 2rem; min-height: 250px; }
+}
+
+@media (max-width: 900px) {
+     .glass-panel { padding: 1.5rem; }
+     .auth-card { margin: 2rem auto; padding: 1.5rem; }
+}
+
+/* --- Footer Styling (UPDATED) --- */
 .footer {
     background-color: transparent; /* Footer blends in */
-    padding: 1.5rem 0;
+    padding: 2rem 0; /* Increased padding */
     color: var(--text-muted-color);
     font-size: 0.9rem;
     margin-top: auto; /* Pushes footer down */
     border-top: 1px solid var(--glass-border);
 }
 
-/* Homepage Specific Styles */
-.hero-section {
-    min-height: 60vh; /* Give space */
-    display: flex;
-    align-items: center;
+.footer-social-links a.footer-icon-link {
+    color: var(--text-muted-color);
+    font-size: 1.5rem; /* Make icons larger */
+    margin: 0 0.75rem; /* Add spacing between icons */
+    text-decoration: none;
+    transition: color 0.3s ease, transform 0.2s ease;
+    display: inline-block; /* Allows transform */
 }
 
-.illustration-placeholder {
-    background-color: rgba(255, 255, 255, 0.03); /* Slightly different bg */
-    border: 2px dashed var(--glass-border);
-    border-radius: var(--border-radius);
-    min-height: 300px;
-    display: flex;
-    align-items: center; /* Removed extra quote */
-    justify-content: center; /* Added semicolon */
-    font-size: 1.2rem;
-    color: var(--text-muted-color); /* Added semicolon */
-    text-align: center;
-    padding: 2rem;
-    height: 100%; /* Fill column height */
+.footer-social-links a.footer-icon-link:hover {
+    color: var(--primary-color); /* Change color on hover */
+    transform: translateY(-2px); /* Slight lift effect */
 }
 
-/* Login/Register Card Styling */
-.auth-card {
-    max-width: 450px;
-    margin: 2rem auto; /* Center card */
+.footer .small {
+    font-size: 0.85em; /* Make copyright slightly smaller */
 }
 
-/* Responsive Adjustments */
-@media (max-width: 991.98px) {
-    main {
-        padding-top: 70px; /* Adjust for potentially smaller navbar */
-    }
-    .hero-section {
-        text-align: center;
-    }
-    .illustration-placeholder {
-        margin-top: 2rem;
-        min-height: 250px;
-    }
+/* Optional: Styling for Privacy/Terms links */
+.footer a.text-muted-color:hover {
+    color: var(--text-color) !important; /* Override text-muted for hover */
+}
+/* --- End Footer Styling --- */
+
+/* --- Navbar Styling (UPDATED) --- */
+.navbar.glass-navbar {
+    /* ... (previous navbar styles) ... */
+    padding-top: 0.6rem; /* Slightly reduce padding */
+    padding-bottom: 0.6rem;
+}
+/* ... (previous navbar styles for brand, links, toggler, dropdown) ... */
+
+/* Navbar Search Input */
+.navbar.glass-navbar .search-input {
+    background-color: rgba(255, 255, 255, 0.08); /* Slightly lighter than forms */
+    border-color: var(--glass-border);
+    color: var(--text-color);
+    max-width: 300px; /* Limit width */
+}
+.navbar.glass-navbar .search-input:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.15rem rgba(0, 170, 255, 0.25);
+}
+.navbar.glass-navbar .search-input::placeholder {
+    color: var(--text-muted-color);
+    opacity: 0.6;
 }
 
-@media (max-width: 767.98px) {
-     .glass-panel {
-        padding: 1.5rem;
-     }
-     .auth-card {
-         margin: 1rem auto;
-         padding: 1.5rem;
-     }
+/* Navbar Buttons (Search, Cart, Register) */
+.navbar.glass-navbar .btn-sm {
+    padding: 0.3rem 0.8rem; /* Adjust padding for small buttons */
+    font-size: 0.9rem;
+}
+.navbar.glass-navbar .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.navbar.glass-navbar .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 0 var(--glow-spread) var(--glow-color);
+}
+.navbar.glass-navbar .btn-outline-secondary {
+    color: var(--text-muted-color);
+    border-color: var(--glass-border);
+}
+.navbar.glass-navbar .btn-outline-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--text-color);
+}
+.navbar.glass-navbar .cart-button {
+    line-height: 1; /* Align icon better */
+}
+.navbar.glass-navbar .cart-button .badge {
+    font-size: 0.65em; /* Make badge smaller */
 }
 
+/* --- End Navbar Styling --- */

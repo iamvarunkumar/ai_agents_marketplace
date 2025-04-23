@@ -6,21 +6,55 @@
 
 {% block content %}
 <div class="container">
+    {# UPDATED: Use a wider column (e.g., col-lg-8 or col-xl-7) for the single card #}
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6 col-xl-5">
+        <div class="col-md-10 col-lg-8 col-xl-7"> {# Adjusted width #}
             {# Apply glassmorphism styling to the card #}
-            <div class="glass-panel auth-card mt-5 mb-5"> {# Added mb-5 for spacing #}
+            <div class="glass-panel auth-card mt-5 mb-5 p-4 p-md-5"> {# Added padding back #}
                 <h2 class="text-center mb-4 fw-bold">Login</h2>
 
                 {# Display non-field errors or general messages from Django messages framework #}
-                {# Field-specific errors will be displayed by {{ form.as_p }} #}
+                 {% if form.non_field_errors %}
+                    <div class="alert alert-danger mb-3" role="alert">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
                 <form id="login-form" method="post" action="{% url 'login_page' %}"> {# Action points to the login view URL #}
                     {% csrf_token %}
 
-                    {# Render the form fields as paragraphs #}
-                    {# This will include labels, inputs, and validation errors #}
-                    {{ form.as_p }}
+                    {# UPDATED: Loop through fields manually to use labels as placeholders #}
+                    {% for field in form %}
+                         <div class="mb-3 form-field-wrapper">
+                            {# Add hidden label for accessibility if needed, or rely on placeholder #}
+                            {# <label for="{{ field.id_for_label }}" class="visually-hidden">{{ field.label }}</label> #}
+
+                            {# Render the input field with placeholder #}
+                            <input type="{{ field.field.widget.input_type }}"
+                                   name="{{ field.name }}"
+                                   id="{{ field.id_for_label }}"
+                                   class="form-control form-control-lg {% if field.errors %}is-invalid{% endif %}" {# Added form-control-lg #}
+                                   placeholder="{{ field.label }}" {# Use label as placeholder #}
+                                   {% if field.field.required %}required{% endif %}>
+
+                            {# Display field-specific errors #}
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block"> {# Use d-block to show errors #}
+                                    {% for error in field.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            {# Display help text if available #}
+                            {% if field.help_text %}
+                                <small class="form-text text-muted-color d-block mt-1">{{ field.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
 
                     {# Hidden field for 'next' URL redirection after login #}
                     {% if next %}
@@ -32,14 +66,14 @@
                     </div>
                 </form>
 
-                <p class="text-center mt-4 mb-0 text-muted-color">
+                <p class="text-center mt-4 mb-0 text-muted-color small"> {# Made text smaller #}
                     Don't have an account?
                     {# Use url tag to link to the registration page view #}
                     <a href="{% url 'register_page' %}" class="fw-bold text-decoration-none link-light">Register here</a>
                 </p>
                  {# Optional: Add forgot password link #}
-                </div>
-        </div>
-    </div>
+                </div> {# End Auth Card #}
+        </div> {# End Outer Column #}
+    </div> {# End Outer Row #}
 </div>
 {% endblock content %}

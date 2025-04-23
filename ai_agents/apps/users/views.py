@@ -6,6 +6,9 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm # Standard Django login form
 from .forms import CustomUserCreationForm
+from django.contrib.auth.decorators import login_required # Import login_required
+
+
 
 # Ensure DRF components are installed and imported if used
 try:
@@ -66,36 +69,8 @@ def home_view(request):
     """
     Renders the site's homepage (templates/home.html).
     """
-    # Add any context needed for the homepage template here
     context = {}
     return render(request, 'home.html', context)
-
-class LoginPageView(TemplateView):
-    """
-    Renders the static login page (templates/registration/login.html).
-    The form submission and logic are handled by JavaScript calling the API.
-    """
-    template_name = "registration/login.html"
-
-    # Optional: Add context if the login page needs dynamic data
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     context['some_key'] = 'some_value'
-    #     return context
-
-class RegisterPageView(TemplateView):
-    """
-    Renders the static registration page (templates/registration/register.html).
-    The form submission and logic are handled by JavaScript calling the API.
-    """
-    template_name = "registration/register.html"
-
-    # Optional: Add context if the registration page needs dynamic data
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     context['another_key'] = 'another_value'
-    #     return context
-    
 
 def register_view(request):
     """
@@ -170,7 +145,6 @@ def login_view(request):
         # Render the login HTML page
         return render(request, 'registration/login.html', context)
 
-
 def logout_view(request):
     """
     Logs the user out using Django's logout function.
@@ -178,6 +152,16 @@ def logout_view(request):
     """
     logout(request)
     messages.info(request, "You have successfully logged out.")
-    # Redirect to the homepage after logout
-    return redirect('home') # Use the URL name for the homepage
+    return redirect('home')
 
+@login_required # Decorator ensures only logged-in users can access this view
+def dashboard_view(request):
+    """
+    Renders the user's dashboard page.
+    Requires user to be logged in.
+    """
+    context = {
+        'user': request.user
+    }
+    # CORRECTED: Point to the correct template path
+    return render(request, 'registration/dashboard.html', context)

@@ -1,3 +1,5 @@
+# E:\Projects\AI Agents\ai_agents\ai_agents\settings.py
+
 """
 Django settings for ai_agents project.
 
@@ -12,26 +14,30 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 from dotenv import load_dotenv
-from pathlib import Path
+from pathlib import Path # Make sure Path is imported
 import dj_database_url # For parsing DATABASE_URL
 from datetime import timedelta # For SimpleJWT
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env')) # Load .env file
-
-SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-if-not-set') # Add a fallback for safety
 
-ALLOWED_HOSTS = []
+# SECURITY WARNING: don't run with debug turned on in production!
+# Read DEBUG from env, default to False if not set explicitly
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+# Read ALLOWED_HOSTS from env, default to empty list
+# Split by comma, strip whitespace from each host
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '').split(',') if host.strip()]
+# Add '127.0.0.1' and 'localhost' for local development if DEBUG is True
+if DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -42,12 +48,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles', # Ensure this is present
     # 3rd Party Apps
     'rest_framework',
     'rest_framework_simplejwt',
     # Your Apps
-    'apps.users.apps.UsersConfig',      # <-- Correct path to the config class
+    'apps.users.apps.UsersConfig',
     'apps.agentify.apps.AgentifyConfig',
 ]
 
@@ -66,7 +72,8 @@ ROOT_URLCONF = 'ai_agents.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        # Tell Django where to find project-level templates
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,6 +88,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ai_agents.wsgi.application'
 
+# Tell Django to use your custom user model
 AUTH_USER_MODEL = 'users.CustomUser'
 
 
@@ -89,32 +97,20 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 # Database (Using dj_database_url)
 DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
+    # Read database config from DATABASE_URL env var
+    'default': dj_database_url.config(default=f'sqlite:///{BASE_DIR / "db.sqlite3"}', conn_max_age=600)
 }
-# If DATABASE_URL not set, fallback for local dev (e.g., SQLite)
-if not DATABASES['default']:
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+# Fallback to SQLite if DATABASE_URL is not set (already handled by default in dj_database_url.config)
 
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    { 'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
 
 
@@ -122,28 +118,37 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend/dist')] # Example if frontend builds here
-STATIC_ROOT = os.path.join(BASE_DIR, 'static') # For collectstatic
+STATIC_URL = 'static/' # URL prefix for static files
 
+# *** ADD THIS SETTING ***
+# Directories where Django looks for static files during development
+STATICFILES_DIRS = [
+    BASE_DIR / 'static', # Points to the 'static' folder in your project root
+]
+
+# Directory where collectstatic will gather files for deployment
+# Note: Don't put your development static files directly in STATIC_ROOT
+STATIC_ROOT = BASE_DIR / 'staticfiles' # Changed from 'static' to avoid conflict
+
+# Media files (User Uploads)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
+MEDIA_ROOT = BASE_DIR / 'mediafiles'
 
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# DRF Settings
+# DRF Settings (Keep if you plan to use DRF for other APIs)
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -154,10 +159,11 @@ REST_FRAMEWORK = {
     # Add other settings like pagination, throttling later
 }
 
-# Simple JWT Settings
+# Simple JWT Settings (Keep if using DRF for other APIs)
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # Adjust as needed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     # Add rotation, blacklist settings later if needed
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
