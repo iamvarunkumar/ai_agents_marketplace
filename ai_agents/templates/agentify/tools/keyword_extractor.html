@@ -1,0 +1,53 @@
+{# templates/agentify/tools/keyword_extractor.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Extract key terms and topics from text." }}</p>{% else %}<p class="text-muted-color">Extract key terms and topics from text.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/keyword.jpg' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="inputText" class="form-label fw-bold">Text to Analyze:</label>
+                        <textarea class="form-control" id="inputText" name="input_text" rows="8" placeholder="Paste the document or text block here..." required>{{ submitted_text|default:'' }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-key-fill me-2"></i>Extract Keywords</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if extracted_keywords is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Extracted Keywords:</h2>
+                        {% if extracted_keywords %}
+                            <div class="glass-panel nested-panel p-3">
+                                {% for keyword in extracted_keywords %}
+                                    <span class="badge bg-secondary text-light me-2 mb-2 p-2">{{ keyword }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">No keywords extracted. Please check input.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .badge { font-weight: 400; }</style>{% endblock extra_head %}

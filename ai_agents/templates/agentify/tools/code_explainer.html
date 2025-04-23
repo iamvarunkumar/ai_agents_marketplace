@@ -1,0 +1,60 @@
+{# templates/agentify/tools/code_explainer.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Get explanations for code snippets." }}</p>{% else %}<p class="text-muted-color">Get explanations for code snippets.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/code.jpg' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="languageSelect" class="form-label fw-bold">Code Language:</label>
+                        <select class="form-select" id="languageSelect" name="language">
+                            <option value="python" {% if selected_language == 'python' %}selected{% endif %}>Python</option>
+                            <option value="javascript" {% if selected_language == 'javascript' %}selected{% endif %}>JavaScript</option>
+                            <option value="html" {% if selected_language == 'html' %}selected{% endif %}>HTML</option>
+                            <option value="css" {% if selected_language == 'css' %}selected{% endif %}>CSS</option>
+                            <option value="java" {% if selected_language == 'java' %}selected{% endif %}>Java</option>
+                            <option value="csharp" {% if selected_language == 'csharp' %}selected{% endif %}>C#</option>
+                            {# Add more languages as needed #}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="codeInput" class="form-label fw-bold">Code Snippet:</label>
+                        <textarea class="form-control code-input" id="codeInput" name="code_snippet" rows="10" placeholder="Paste your code snippet here..." required>{{ submitted_code|default:'' }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-chat-left-text-fill me-2"></i>Explain Code</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                 {% if explanation is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Explanation:</h2>
+                        <div class="glass-panel nested-panel p-4">
+                           <p>{{ explanation|default:"Could not generate explanation."|linebreaksbr }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .code-input { font-family: 'Courier New', Courier, monospace; background-color: rgba(0,0,0, 0.2) !important; color: var(--text-color); }</style>{% endblock extra_head %}
+

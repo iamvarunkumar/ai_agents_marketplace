@@ -1,0 +1,70 @@
+{# templates/agentify/tools/image_alt_text_generator.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Generate descriptive alt text for images." }}</p>{% else %}<p class="text-muted-color">Generate descriptive alt text for images.</p>{% endif %}
+                         <p class="small text-info"><i class="bi bi-info-circle-fill me-1"></i> Enter an image URL or a brief description.</p>
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/alt.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                {# NOTE: Actual image upload requires form changes and backend handling #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="imageInput" class="form-label fw-bold">Image URL or Description:</label>
+                        <input type="text" class="form-control form-control-lg" id="imageInput" name="image_input" placeholder="e.g., https://example.com/image.jpg OR 'A cat sitting on a windowsill'" value="{{ submitted_input|default:'' }}" required>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-image-alt me-2"></i>Generate Alt Text</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if generated_alt_text is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Alt Text:</h2>
+                        <div class="glass-panel nested-panel p-3 d-flex justify-content-between align-items-center">
+                            <p class="alt-text-output mb-0 me-3">{{ generated_alt_text|default:"No alt text generated." }}</p>
+                            <button class="btn btn-sm btn-outline-secondary copy-btn flex-shrink-0" title="Copy alt text" data-text="{{ generated_alt_text }}">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .copy-btn { opacity: 0.6; transition: opacity 0.2s ease-in-out; } .copy-btn:hover { opacity: 1; } .copy-btn.copied { opacity: 1; color: var(--bs-success); border-color: var(--bs-success); }</style>{% endblock extra_head %}
+{% block extra_scripts %}
+<script>
+    // Basic Copy Button Functionality
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const textToCopy = button.dataset.text;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalIcon = button.innerHTML;
+                    button.innerHTML = '<i class="bi bi-clipboard-check-fill"></i>'; button.classList.add('copied');
+                    setTimeout(() => { button.innerHTML = originalIcon; button.classList.remove('copied'); }, 1500);
+                }).catch(err => { console.error('Failed to copy: ', err); alert('Failed to copy text.'); });
+            });
+        });
+    });
+</script>
+{% endblock extra_scripts %}
+

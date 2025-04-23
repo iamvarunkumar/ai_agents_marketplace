@@ -1,0 +1,77 @@
+{# templates/agentify/tools/docstring_writer.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Generate basic docstrings for code." }}</p>{% else %}<p class="text-muted-color">Generate basic docstrings for code.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/docstring.jpg' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                     <div class="mb-3">
+                        <label for="languageSelect" class="form-label fw-bold">Code Language:</label>
+                        <select class="form-select" id="languageSelect" name="language">
+                            <option value="python" {% if selected_language == 'python' %}selected{% endif %}>Python</option>
+                            <option value="javascript" {% if selected_language == 'javascript' %}selected{% endif %}>JavaScript</option>
+                            <option value="java" {% if selected_language == 'java' %}selected{% endif %}>Java</option>
+                            {# Add more languages as needed #}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="codeInput" class="form-label fw-bold">Function or Class Snippet:</label>
+                        <textarea class="form-control code-input" id="codeInput" name="code_snippet" rows="10" placeholder="Paste your function or class definition here..." required>{{ submitted_code|default:'' }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-file-earmark-code-fill me-2"></i>Generate Docstring</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if generated_docstring is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Docstring:</h2>
+                        <div class="glass-panel nested-panel p-3 d-flex justify-content-between align-items-start">
+                            <pre class="docstring-output flex-grow-1 me-3 mb-0"><code>{{ generated_docstring|default:"No docstring generated." }}</code></pre>
+                             <button class="btn btn-sm btn-outline-secondary copy-btn flex-shrink-0" title="Copy docstring" data-text="{{ generated_docstring }}">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .code-input, pre.docstring-output { font-family: 'Courier New', Courier, monospace; background-color: rgba(0,0,0, 0.2) !important; color: var(--text-color); } pre.docstring-output { background-color: transparent !important; padding: 0; white-space: pre-wrap; word-wrap: break-word; } .copy-btn { opacity: 0.6; transition: opacity 0.2s ease-in-out; } .copy-btn:hover { opacity: 1; } .copy-btn.copied { opacity: 1; color: var(--bs-success); border-color: var(--bs-success); }</style>{% endblock extra_head %}
+{% block extra_scripts %}
+<script>
+    // Basic Copy Button Functionality
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const textToCopy = button.dataset.text;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalIcon = button.innerHTML;
+                    button.innerHTML = '<i class="bi bi-clipboard-check-fill"></i>'; button.classList.add('copied');
+                    setTimeout(() => { button.innerHTML = originalIcon; button.classList.remove('copied'); }, 1500);
+                }).catch(err => { console.error('Failed to copy: ', err); alert('Failed to copy text.'); });
+            });
+        });
+    });
+</script>
+{% endblock extra_scripts %}
+

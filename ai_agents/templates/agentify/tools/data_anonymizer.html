@@ -1,0 +1,48 @@
+{# templates/agentify/tools/data_anonymizer.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Attempt to remove/mask PII from text data." }}</p>{% else %}<p class="text-muted-color">Attempt to remove/mask PII from text data.</p>{% endif %}
+                        <p class="small text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Use with caution. AI anonymization is not foolproof. Always review results carefully.</p>
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/data-anon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="inputData" class="form-label fw-bold">Data to Anonymize:</label>
+                        <textarea class="form-control" id="inputData" name="input_data" rows="8" placeholder="Paste structured or unstructured text data here..." required>{{ submitted_data|default:'' }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-warning btn-lg mt-2"><i class="bi bi-shield-slash-fill me-2"></i>Anonymize Data</button> {# Warning color button #}
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if anonymized_data is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Anonymized Output:</h2>
+                        <div class="glass-panel nested-panel p-3">
+                            <pre class="anonymized-output"><code>{{ anonymized_data|default:"No output generated." }}</code></pre>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } pre.anonymized-output { background-color: transparent; padding: 0; color: var(--text-color); white-space: pre-wrap; word-wrap: break-word; }</style>{% endblock extra_head %}

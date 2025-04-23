@@ -1,0 +1,83 @@
+{# templates/agentify/tools/unit_converter.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Convert between different units." }}</p>{% else %}<p class="text-muted-color">Convert between different units.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/converter_illustration.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                 <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4 mb-3">
+                            <label for="inputValue" class="form-label fw-bold">Value:</label>
+                            <input type="number" step="any" class="form-control form-control-lg" id="inputValue" name="input_value" placeholder="e.g., 100" value="{{ submitted_value|default:'' }}" required>
+                        </div>
+                         <div class="col-md-3 mb-3">
+                            <label for="fromUnitSelect" class="form-label fw-bold">From Unit:</label>
+                             <select class="form-select form-select-lg" id="fromUnitSelect" name="from_unit" required>
+                                 <option value="" disabled {% if not selected_from %}selected{% endif %}>Select...</option>
+                                 {% for category, units_list in unit_categories.items %}
+                                    <optgroup label="{{ category|title }}">
+                                        {% for unit in units_list %}
+                                        <option value="{{ unit }}" {% if selected_from == unit %}selected{% endif %}>{{ unit|title }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                 {% endfor %}
+                             </select>
+                        </div>
+                         <div class="col-md-1 mb-3 text-center pt-4 d-none d-md-block">
+                            <i class="bi bi-arrow-right-short fs-3"></i>
+                         </div>
+                         <div class="col-md-3 mb-3">
+                             <label for="toUnitSelect" class="form-label fw-bold">To Unit:</label>
+                             <select class="form-select form-select-lg" id="toUnitSelect" name="to_unit" required>
+                                 <option value="" disabled {% if not selected_to %}selected{% endif %}>Select...</option>
+                                  {% for category, units_list in unit_categories.items %}
+                                    <optgroup label="{{ category|title }}">
+                                        {% for unit in units_list %}
+                                        <option value="{{ unit }}" {% if selected_to == unit %}selected{% endif %}>{{ unit|title }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                 {% endfor %}
+                             </select>
+                        </div>
+                         <div class="col-md-1 mb-3 d-grid">
+                             <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-arrow-repeat"></i></button>
+                        </div>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if converted_value is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Conversion Result:</h2>
+                        {% if converted_value %}
+                            <div class="glass-panel nested-panel p-4 text-center">
+                                <p class="fs-3 mb-0">{{ converted_value }}</p>
+                            </div>
+                        {% else %}
+                             {# Error message displayed via messages framework #}
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); }</style>{% endblock extra_head %}
+

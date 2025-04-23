@@ -1,0 +1,108 @@
+{# templates/agentify/tools/meeting_summarizer.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9"> {# Consistent width #}
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}
+                        <p class="text-muted-color">{{ agent.short_description|default:"Generate concise meeting summaries." }}</p>
+                        {% else %}
+                        <p class="text-muted-color">Generate concise meeting summaries.</p>
+                        {% endif %}
+                    </div>
+                    {# Illustration Placeholder #}
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/meeting.jpg' %}" {# <-- CHANGE FILENAME #}
+                              alt="{{ page_title }} Illustration"
+                              class="img-fluid rounded"
+                              style="max-height: 100px;"> {# Adjust size #}
+                    </div>
+                </div>
+
+                {# Input Form #}
+                <form method="post" action=""> {# Submit to the same URL #}
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="meetingTextInput" class="form-label fw-bold">Paste Meeting Transcript or Notes:</label>
+                        <textarea class="form-control" id="meetingTextInput" name="meeting_text" rows="10" placeholder="Paste the full text from your meeting here..." required>{{ submitted_text|default:'' }}</textarea>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2">
+                            <i class="bi bi-file-earmark-text-fill me-2"></i>Generate Summary
+                        </button>
+                    </div>
+                </form>
+
+                {# Results Area #}
+                {% if generated_summary is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Summary:</h2>
+                        {% if generated_summary %}
+                            {# Apply glass effect to results container #}
+                            <div class="glass-panel nested-panel p-4">
+                                {% if generated_summary.title %}
+                                    <h3 class="h5 fw-bold mb-3">{{ generated_summary.title }}</h3>
+                                {% endif %}
+
+                                {% if generated_summary.key_points %}
+                                    <h4 class="h6 fw-bold text-muted-color mb-2">Key Points:</h4>
+                                    <ul class="list-unstyled ps-3 mb-3">
+                                        {% for point in generated_summary.key_points %}
+                                        <li><i class="bi bi-dot me-1"></i>{{ point }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+
+                                {% if generated_summary.action_items %}
+                                    <h4 class="h6 fw-bold text-muted-color mb-2">Action Items:</h4>
+                                    <ul class="list-unstyled ps-3 mb-0">
+                                        {% for item in generated_summary.action_items %}
+                                        <li><i class="bi bi-check2-square me-1"></i>{{ item }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">Could not generate summary. Please check your input text.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            </div> {# End Main Panel #}
+        </div> {# End Column #}
+    </div> {# End Row #}
+</div>
+{% endblock content %}
+
+{% block extra_head %}
+{# Add specific CSS if needed #}
+<style>
+    .tool-illustration-container img {
+        opacity: 0.8;
+    }
+    .nested-panel { /* Style results container */
+         background-color: rgba(0,0,0, 0.15) !important;
+         backdrop-filter: blur(5px);
+         -webkit-backdrop-filter: blur(5px);
+         border-color: rgba(255, 255, 255, 0.1) !important;
+         color: var(--text-color) !important;
+         border-radius: var(--border-radius);
+    }
+    .nested-panel ul li {
+        margin-bottom: 0.5rem; /* Spacing for list items */
+    }
+</style>
+{% endblock extra_head %}
+

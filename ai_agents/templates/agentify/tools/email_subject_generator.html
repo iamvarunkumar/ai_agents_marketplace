@@ -1,0 +1,135 @@
+{# templates/agentify/tools/email_subject_generator.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9"> {# Consistent width #}
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}
+                        <p class="text-muted-color">{{ agent.short_description|default:"Generate effective email subject lines." }}</p>
+                        {% else %}
+                        <p class="text-muted-color">Generate effective email subject lines.</p>
+                        {% endif %}
+                    </div>
+                    {# Illustration Placeholder #}
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/email.jpg' %}" {# <-- CHANGE FILENAME #}
+                              alt="{{ page_title }} Illustration"
+                              class="img-fluid rounded"
+                              style="max-height: 400px;"> {# Adjust size #}
+                    </div>
+                </div>
+
+                {# Input Form #}
+                <form method="post" action=""> {# Submit to the same URL #}
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="emailBodyInput" class="form-label fw-bold">Paste Email Body Snippet:</label>
+                        <textarea class="form-control" id="emailBodyInput" name="email_body" rows="6" placeholder="Paste the main content of your email here..." required>{{ submitted_body|default:'' }}</textarea>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2">
+                            <i class="bi bi-envelope-paper-heart-fill me-2"></i>Generate Subjects
+                        </button>
+                    </div>
+                </form>
+
+                {# Results Area #}
+                {% if generated_subjects is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Subject Lines:</h2>
+                        {% if generated_subjects %}
+                            <div class="list-group list-group-flush">
+                                {% for subject in generated_subjects %}
+                                    {# Apply glass effect to list items #}
+                                    <div class="list-group-item bg-transparent border-secondary text-light py-3 mb-2 glass-panel nested-panel d-flex justify-content-between align-items-center"> {# Use nested panel style #}
+                                        <span class="subject-text">{{ subject }}</span>
+                                        <button class="btn btn-sm btn-outline-secondary copy-btn" title="Copy subject" data-subject="{{ subject }}">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">No subjects generated. Please check your input.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            </div> {# End Main Panel #}
+        </div> {# End Column #}
+    </div> {# End Row #}
+</div>
+{% endblock content %}
+
+{% block extra_head %}
+{# Add specific CSS if needed #}
+<style>
+    .tool-illustration-container img {
+        opacity: 0.8;
+    }
+    .list-group-item.nested-panel { /* Style results */
+         background-color: rgba(0,0,0, 0.15) !important;
+         backdrop-filter: blur(5px);
+         -webkit-backdrop-filter: blur(5px);
+         border-color: rgba(255, 255, 255, 0.1) !important;
+         color: var(--text-color) !important;
+         border-radius: var(--border-radius);
+    }
+    .copy-btn {
+        opacity: 0.6;
+        transition: opacity 0.2s ease-in-out;
+    }
+     .copy-btn:hover {
+        opacity: 1;
+    }
+    .copy-btn.copied { /* Style for after copying */
+        opacity: 1;
+        color: var(--bs-success); /* Use Bootstrap success color */
+        border-color: var(--bs-success);
+    }
+</style>
+{% endblock extra_head %}
+
+{% block extra_scripts %}
+{# Basic JavaScript for Copy Button Functionality #}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const copyButtons = document.querySelectorAll('.copy-btn');
+
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const subjectToCopy = button.dataset.subject;
+                navigator.clipboard.writeText(subjectToCopy).then(() => {
+                    // Success feedback: change icon temporarily
+                    const originalIcon = button.innerHTML;
+                    button.innerHTML = '<i class="bi bi-clipboard-check-fill"></i>'; // Checkmark icon
+                    button.classList.add('copied');
+
+                    // Reset after a short delay
+                    setTimeout(() => {
+                        button.innerHTML = originalIcon;
+                        button.classList.remove('copied');
+                    }, 1500); // Reset after 1.5 seconds
+
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    // Optional: Provide feedback to the user about the error
+                    alert('Failed to copy subject line.');
+                });
+            });
+        });
+    });
+</script>
+{% endblock extra_scripts %}

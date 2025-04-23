@@ -13,7 +13,8 @@ urlpatterns = [
     path('register/', user_views.register_view, name='register_page'), # Register view (GET/POST)
     path('logout/', user_views.logout_view, name='logout_page'), # Logout view
     path('dashboard/', user_views.dashboard_view, name='dashboard_view'),
-    path('agents/', include('apps.agentify.urls', namespace='agentify')),# Name is 'dashboard_view'
+    path('agents/', include('apps.agentify.urls', namespace='agentify')),
+    path('admin/', admin.site.urls),# Name is 'dashboard_view'
 
     # --- Admin Site ---
     # path('admin/', admin.site.urls), # Still commented out

@@ -1,0 +1,96 @@
+{# templates/agentify/tools/social_media_post_creator.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9"> {# Consistent width #}
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}
+                        <p class="text-muted-color">{{ agent.short_description|default:"Generate catchy social media posts." }}</p>
+                        {% else %}
+                        <p class="text-muted-color">Generate catchy social media posts.</p>
+                        {% endif %}
+                    </div>
+                    {# Illustration Placeholder #}
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/social_post_illustration.png' %}" {# <-- CHANGE FILENAME #}
+                              alt="{{ page_title }} Illustration"
+                              class="img-fluid rounded"
+                              style="max-height: 100px;"> {# Adjust size #}
+                    </div>
+                </div>
+
+                {# Input Form #}
+                <form method="post" action=""> {# Submit to the same URL #}
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="inputText" class="form-label fw-bold">Input Text or Link:</label>
+                        <textarea class="form-control" id="inputText" name="input_text" rows="4" placeholder="Enter the main point, announcement, or paste a link..." required>{{ submitted_text|default:'' }}</textarea>
+                    </div>
+                     <div class="mb-3">
+                        <label for="platformSelect" class="form-label fw-bold">Target Platform:</label>
+                        <select class="form-select" id="platformSelect" name="platform">
+                            <option value="twitter" {% if selected_platform == 'twitter' %}selected{% endif %}>Twitter / X</option>
+                            <option value="linkedin" {% if selected_platform == 'linkedin' %}selected{% endif %}>LinkedIn</option>
+                            <option value="generic" {% if selected_platform == 'generic' %}selected{% endif %}>Generic</option>
+                        </select>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2">
+                            <i class="bi bi-megaphone-fill me-2"></i>Generate Posts
+                        </button>
+                    </div>
+                </form>
+
+                {# Results Area #}
+                {% if generated_posts is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Posts{% if selected_platform %} for {{ selected_platform|title }}{% endif %}:</h2>
+                        {% if generated_posts %}
+                            <div class="list-group list-group-flush">
+                                {% for post in generated_posts %}
+                                    {# Apply glass effect to list items #}
+                                    <div class="list-group-item bg-transparent border-secondary text-light py-3 mb-2 glass-panel nested-panel"> {# Use nested panel style #}
+                                        <p class="mb-0">{{ post|linebreaksbr }}</p> {# Use linebreaksbr for potential newlines #}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">No posts generated. Please check your input.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            </div> {# End Main Panel #}
+        </div> {# End Column #}
+    </div> {# End Row #}
+</div>
+{% endblock content %}
+
+{% block extra_head %}
+{# Add specific CSS if needed #}
+<style>
+    .tool-illustration-container img {
+        opacity: 0.8;
+    }
+    .list-group-item.nested-panel { /* Style results */
+         background-color: rgba(0,0,0, 0.15) !important;
+         backdrop-filter: blur(5px);
+         -webkit-backdrop-filter: blur(5px);
+         border-color: rgba(255, 255, 255, 0.1) !important;
+         color: var(--text-color) !important;
+         border-radius: var(--border-radius);
+    }
+</style>
+{% endblock extra_head %}

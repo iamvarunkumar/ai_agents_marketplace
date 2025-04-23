@@ -11,10 +11,37 @@
             <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
 
                 {# Agent Header #}
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="display-6 fw-bold mb-0">{{ agent.name }}</h1>
-                    {# Placeholder Button to Run/Use Agent #}
-                    <a href="#" class="btn btn-primary"><i class="bi bi-play-fill me-2"></i>Run Agent</a>
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap"> {# Added flex-wrap #}
+                    <h1 class="display-6 fw-bold mb-2 me-3">{{ agent.name }}</h1> {# Added me-3 #}
+
+                    {# --- UPDATED: Add/Remove Buttons --- #}
+                    <div class="agent-actions mb-2">
+                        {% if user.is_authenticated %}
+                            {% if in_workspace %}
+                                {# Show Remove Button if agent is in workspace #}
+                                <form action="{% url 'agentify:remove_from_workspace' agent_slug=agent.slug %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-x-lg me-1"></i> Remove from Workspace
+                                    </button>
+                                </form>
+                            {% else %}
+                                {# Show Add Button if agent is not in workspace #}
+                                <form action="{% url 'agentify:add_to_workspace' agent_slug=agent.slug %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-plus-lg me-1"></i> Add to Workspace
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            {# Prompt non-logged-in users to login #}
+                            <a href="{% url 'login_page' %}?next={{ request.path }}" class="btn btn-outline-primary btn-sm">Login to Add</a>
+                        {% endif %}
+                         {# Placeholder Run Button #}
+                        <a href="#" class="btn btn-primary btn-sm ms-2"><i class="bi bi-play-fill me-1"></i>Run Agent</a>
+                    </div>
+                     {# --- END UPDATED Buttons --- #}
                 </div>
 
                 {# Agent Metadata #}
@@ -28,8 +55,6 @@
                         {% endif %}
                          on {{ agent.created_at|date:"M d, Y" }}
                     </p>
-                    {# Add other metadata like version later #}
-                    {# <p class="small text-muted-color mb-1">Version: {{ agent.version|default:"1.0" }}</p> #}
                 </div>
 
                 {# Agent Description #}
@@ -45,8 +70,6 @@
                     <h3 class="h5 fw-bold mb-3">Input Specification</h3>
                     <div class="glass-panel p-3 nested-panel"> {# Nested panel example #}
                         <p class="small text-muted-color mb-0"><em>Input details will be shown here (e.g., required format, example).</em></p>
-                        {# Example using hypothetical JSON field #}
-                        {# {% if agent.input_schema %} <pre><code>{{ agent.input_schema|json_script:"input-schema" }}</code></pre> {% endif %} #}
                     </div>
                 </div>
 
@@ -54,8 +77,6 @@
                     <h3 class="h5 fw-bold mb-3">Output Specification</h3>
                      <div class="glass-panel p-3 nested-panel">
                         <p class="small text-muted-color mb-0"><em>Output details will be shown here (e.g., format, example).</em></p>
-                         {# Example using hypothetical JSON field #}
-                         {# {% if agent.output_schema %} <pre><code>{{ agent.output_schema|json_script:"output-schema" }}</code></pre> {% endif %} #}
                     </div>
                 </div>
 
@@ -63,7 +84,6 @@
                     <h3 class="h5 fw-bold mb-3">Example Usage</h3>
                      <div class="glass-panel p-3 nested-panel">
                         <p class="small text-muted-color mb-0"><em>Code snippets or instructions on how to use the agent will appear here.</em></p>
-                        {# <pre><code>Example code...</code></pre> #}
                     </div>
                 </div>
 
@@ -99,6 +119,9 @@
         color: var(--text-color);
         white-space: pre-wrap; /* Wrap long lines */
         word-wrap: break-word;
+    }
+    .agent-actions form { /* Ensure forms display inline */
+        margin: 0;
     }
 </style>
 {% endblock extra_head %}

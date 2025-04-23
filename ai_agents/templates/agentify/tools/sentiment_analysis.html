@@ -1,0 +1,54 @@
+{# templates/agentify/tools/sentiment_analysis.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Analyze text for positive, negative, or neutral sentiment." }}</p>{% else %}<p class="text-muted-color">Analyze text for positive, negative, or neutral sentiment.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/sentiment.jpg' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="inputText" class="form-label fw-bold">Text to Analyze:</label>
+                        <textarea class="form-control" id="inputText" name="input_text" rows="5" placeholder="Enter or paste the text you want to analyze..." required>{{ submitted_text|default:'' }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-emoji-smile-fill me-2"></i>Analyze Sentiment</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if analysis_result is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Analysis Result:</h2>
+                        {% if analysis_result %}
+                            <div class="glass-panel nested-panel p-4 text-center">
+                                <p class="fs-4 mb-1">Sentiment: <strong class="{% if analysis_result.sentiment == 'Positive' %}text-success{% elif analysis_result.sentiment == 'Negative' %}text-danger{% else %}text-warning{% endif %}">{{ analysis_result.sentiment }}</strong></p>
+                                {% if analysis_result.score is not None %}
+                                <p class="small text-muted-color">(Confidence Score: {{ analysis_result.score|floatformat:2 }})</p>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">Could not determine sentiment. Please check input.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); }</style>{% endblock extra_head %}

@@ -1,0 +1,93 @@
+{# templates/agentify/tools/color_palette_suggester.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Suggest color palettes based on input." }}</p>{% else %}<p class="text-muted-color">Suggest color palettes based on input.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/pallete.jpg' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="baseInput" class="form-label fw-bold">Base Color, Description, or Image URL:</label>
+                        <input type="text" class="form-control form-control-lg" id="baseInput" name="base_input" placeholder="e.g., #FF5733, 'calm beach scene', https://..." value="{{ submitted_input|default:'' }}" required>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-palette-fill me-2"></i>Suggest Palette</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if generated_palette is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Suggested Palette:</h2>
+                        {% if generated_palette %}
+                            <div class="glass-panel nested-panel p-3 d-flex flex-wrap justify-content-center">
+                                {% for color in generated_palette %}
+                                    <div class="color-swatch-wrapper m-2 text-center">
+                                        <div class="color-swatch" style="background-color: {{ color }};" title="Copy {{ color }}"></div>
+                                        <code class="color-code small d-block mt-1 copy-text" data-text="{{ color }}">{{ color }}</code>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">Could not generate palette. Please check input.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}
+<style>
+    .tool-illustration-container img { opacity: 0.8; }
+    .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); }
+    .color-swatch-wrapper { width: 100px; }
+    .color-swatch {
+        width: 100px; height: 80px;
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }
+    .color-swatch:hover { transform: scale(1.05); }
+    .color-code { cursor: pointer; opacity: 0.7; }
+    .color-code:hover { opacity: 1; }
+    .color-code.copied { color: var(--bs-success); font-weight: bold; }
+</style>
+{% endblock extra_head %}
+{% block extra_scripts %}
+<script>
+    // Copy color code on click
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.copy-text, .color-swatch').forEach(element => {
+            element.addEventListener('click', () => {
+                const textToCopy = element.dataset.text || element.nextElementSibling?.dataset.text || element.style.backgroundColor; // Get hex or rgb
+                const codeElement = element.classList.contains('color-code') ? element : element.nextElementSibling;
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalText = codeElement.textContent;
+                    codeElement.textContent = 'Copied!'; codeElement.classList.add('copied');
+                    setTimeout(() => { codeElement.textContent = originalText; codeElement.classList.remove('copied'); }, 1500);
+                }).catch(err => { console.error('Failed to copy: ', err); alert('Failed to copy color code.'); });
+            });
+        });
+    });
+</script>
+{% endblock extra_scripts %}
+

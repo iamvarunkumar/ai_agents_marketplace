@@ -1,0 +1,61 @@
+{# templates/agentify/tools/logo_idea_generator.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Generate basic logo concepts." }}</p>{% else %}<p class="text-muted-color">Generate basic logo concepts.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/logo.jpg' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="companyNameInput" class="form-label fw-bold">Company Name:</label>
+                            <input type="text" class="form-control form-control-lg" id="companyNameInput" name="company_name" placeholder="e.g., Nebula Tech" value="{{ submitted_company|default:'' }}" required>
+                        </div>
+                         <div class="col-md-6">
+                            <label for="industryInput" class="form-label fw-bold">Industry / Field:</label>
+                            <input type="text" class="form-control form-control-lg" id="industryInput" name="industry" placeholder="e.g., Software, Coffee Shop, Eco-friendly" value="{{ submitted_industry|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-lightbulb-fill me-2"></i>Generate Logo Ideas</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if logo_ideas is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Logo Concepts:</h2>
+                        {% if logo_ideas %}
+                            <div class="list-group list-group-flush">
+                                {% for idea in logo_ideas %}
+                                    <div class="list-group-item bg-transparent border-secondary text-light py-3 mb-2 glass-panel nested-panel">
+                                        <p class="mb-0">{{ idea }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">Could not generate logo ideas. Please check input.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); }</style>{% endblock extra_head %}

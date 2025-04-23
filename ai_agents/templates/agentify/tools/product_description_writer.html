@@ -1,0 +1,95 @@
+{# templates/agentify/tools/product_description_writer.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9"> {# Consistent width #}
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}
+                        <p class="text-muted-color">{{ agent.short_description|default:"Generate engaging product descriptions." }}</p>
+                        {% else %}
+                        <p class="text-muted-color">Generate engaging product descriptions.</p>
+                        {% endif %}
+                    </div>
+                    {# Illustration Placeholder #}
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/product-desc.jpg' %}" {# <-- CHANGE FILENAME #}
+                              alt="{{ page_title }} Illustration"
+                              class="img-fluid rounded"
+                              style="max-height: 400px;"> {# Adjust size #}
+                    </div>
+                </div>
+
+                {# Input Form #}
+                <form method="post" action=""> {# Submit to the same URL #}
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="productNameInput" class="form-label fw-bold">Product Name:</label>
+                        <input type="text" class="form-control form-control-lg" id="productNameInput" name="product_name" placeholder="e.g., Quantum Leap Sneakers, Nebula Coffee Maker" value="{{ submitted_product|default:'' }}" required>
+                    </div>
+                     <div class="mb-3">
+                        <label for="featuresInput" class="form-label fw-bold">Key Features (comma-separated):</label>
+                        <textarea class="form-control" id="featuresInput" name="features" rows="3" placeholder="e.g., lightweight design, AI-powered brewing, long battery life" required>{{ request.POST.features|default:'' }}</textarea>
+                    </div>
+                     <div class="mb-3">
+                        <label for="audienceInput" class="form-label fw-bold">Target Audience (Optional):</label>
+                        <input type="text" class="form-control" id="audienceInput" name="audience" placeholder="e.g., busy professionals, tech enthusiasts, outdoor adventurers" value="{{ request.POST.audience|default:'' }}">
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2">
+                            <i class="bi bi-pencil-fill me-2"></i>Generate Descriptions
+                        </button>
+                    </div>
+                </form>
+
+                {# Results Area #}
+                {% if generated_descriptions is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Descriptions{% if submitted_product %} for "{{ submitted_product }}"{% endif %}:</h2>
+                        {% if generated_descriptions %}
+                            <div class="list-group list-group-flush">
+                                {% for desc in generated_descriptions %}
+                                    {# Apply glass effect to list items #}
+                                    <div class="list-group-item bg-transparent border-secondary text-light py-3 mb-2 glass-panel nested-panel"> {# Use nested panel style #}
+                                        <p class="mb-0">{{ desc }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">No descriptions generated. Please check your input.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            </div> {# End Main Panel #}
+        </div> {# End Column #}
+    </div> {# End Row #}
+</div>
+{% endblock content %}
+
+{% block extra_head %}
+{# Add specific CSS if needed #}
+<style>
+    .tool-illustration-container img {
+        opacity: 0.8;
+    }
+    .list-group-item.nested-panel { /* Style results */
+         background-color: rgba(0,0,0, 0.15) !important;
+         backdrop-filter: blur(5px);
+         -webkit-backdrop-filter: blur(5px);
+         border-color: rgba(255, 255, 255, 0.1) !important;
+         color: var(--text-color) !important;
+         border-radius: var(--border-radius);
+    }
+</style>
+{% endblock extra_head %}

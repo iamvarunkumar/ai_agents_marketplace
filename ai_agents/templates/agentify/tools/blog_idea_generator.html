@@ -1,0 +1,90 @@
+{# templates/agentify/tools/blog_idea_generator.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9"> {# Consistent width #}
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {# Display description from the Agent model if found #}
+                        {% if agent %}
+                        <p class="text-muted-color">{{ agent.short_description|default:"Generate creative ideas based on your input." }}</p>
+                        {% else %}
+                        <p class="text-muted-color">Generate creative ideas based on your input.</p>
+                        {% endif %}
+                    </div>
+                    {# Illustration Placeholder #}
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         {# Make sure this image exists in static/images/ #}
+                         <img src="{% static 'images/blog.jpg' %}" {# <-- CHANGE FILENAME if needed #}
+                              alt="{{ page_title }} Illustration"
+                              class="img-fluid rounded"
+                              style="max-height: 400px;"> {# Adjust size #}
+                    </div>
+                </div>
+
+                {# Input Form #}
+                {# Submits a POST request back to this same page's URL #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="topicInput" class="form-label fw-bold">Enter Topic or Keywords:</label>
+                        <input type="text" class="form-control form-control-lg" id="topicInput" name="topic" placeholder="e.g., sustainable travel, AI in marketing, remote work tips" value="{{ submitted_topic|default:'' }}" required>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2">
+                            <i class="bi bi-lightbulb-fill me-2"></i>Generate Ideas
+                        </button>
+                    </div>
+                </form>
+
+                {# Results Area - Only shown if generated_ideas is not None (i.e., after form submission) #}
+                {% if generated_ideas is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Ideas{% if submitted_topic %} for "{{ submitted_topic }}"{% endif %}:</h2>
+                        {% if generated_ideas %}
+                            {# Use a styled list group for results #}
+                            <ul class="list-group list-group-flush">
+                                {% for idea in generated_ideas %}
+                                    {# Apply glass effect to list items #}
+                                    <li class="list-group-item bg-transparent border-secondary text-light py-3">
+                                        <i class="bi bi-check-circle-fill me-2 text-success"></i> {{ idea }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                             {# Message if topic was submitted but no ideas generated (or empty topic) #}
+                            <p class="text-muted-color">No ideas generated for this topic. Try being more specific or broader.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            </div> {# End Main Panel #}
+        </div> {# End Column #}
+    </div> {# End Row #}
+</div>
+{% endblock content %}
+
+{% block extra_head %}
+{# Add specific CSS if needed #}
+<style>
+    .tool-illustration-container img {
+        opacity: 0.8; /* Optional: make illustration slightly transparent */
+    }
+    .list-group-item {
+         /* Ensure list items blend with the glass panel */
+         background-color: transparent !important;
+         border-color: rgba(255, 255, 255, 0.1) !important; /* Match glass border */
+         color: var(--text-color) !important;
+    }
+</style>
+{% endblock extra_head %}
