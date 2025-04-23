@@ -1,23 +1,6 @@
 /* static/css/style.css */
 
 /* UPDATED: Import Poppins font */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
-:root {
-    /* ... (variables remain the same) ... */
-    --bg-color: #1a1a1d; /* Dark fallback color */
-    --glass-bg: rgba(44, 44, 49, 0.4);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --text-color: #e0e0e0;
-    --text-muted-color: #a0a0a0;
-    --primary-color: #00aaff;
-    --primary-hover-color: #0088cc;
-    --border-radius: 8px;
-    --shadow-color: rgba(0, 0, 0, 0.3);
-    --glow-color: rgba(0, 170, 255, 0.7);
-    --glow-spread: 5px;
-}
-
 html {
     height: 100%;
 }
@@ -52,14 +35,7 @@ body {
 
 /* ... (rest of the CSS remains the same) ... */
 
-/* Main content area */
-main {
-    flex-grow: 1;
-    padding-top: 80px;
-    padding-bottom: 4rem;
-    /* Add a subtle overlay to ensure text readability over background */
-    background-color: rgba(26, 26, 29, 0.5); /* Semi-transparent overlay */
-}
+
 
 /* Glassmorphism Effect Utility Class */
 .glass-panel {
@@ -373,3 +349,159 @@ main {
 }
 
 /* --- End Navbar Styling --- */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-color: #1a1a1d; /* Dark background */
+    --bg-gradient: linear-gradient(135deg, #1a1a1d 0%, #2c2c31 100%); /* Subtle gradient */
+    --glass-bg: rgba(44, 44, 49, 0.4); /* Semi-transparent dark glass */
+    --glass-border: rgba(255, 255, 255, 0.1); /* Subtle light border for glass */
+    --text-color: #e0e0e0; /* Light text */
+    --text-muted-color: #a0a0a0; /* Muted text */
+    --primary-color: #00aaff; /* Accent color (adjust as needed) */
+    --primary-hover-color: #0088cc;
+    --border-radius: 8px; /* Consistent rounded corners */
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    /* Added for button/card glow */
+    --glow-color: rgba(0, 170, 255, 0.7); /* Primary color glow */
+    --glow-spread: 5px;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-color);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.6;
+    margin: 0;
+    background-image: url('/static/images/your_background_image.jpg'); /* Ensure this path is correct */
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: var(--bg-color); /* Fallback */
+}
+
+main {
+    flex-grow: 1;
+    padding-top: 80px;
+    padding-bottom: 4rem;
+    background-color: rgba(26, 26, 29, 0.5); /* Overlay for readability */
+}
+
+.glass-panel {
+    background: var(--glass-bg);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 30px var(--shadow-color);
+    padding: 2rem;
+    /* Transition for hover effects on panels/cards */
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out;
+}
+
+/* Agent Card Specific Styling */
+.agent-card {
+    padding: 1rem; /* Override default panel padding if needed */
+    cursor: pointer; /* Indicate it's clickable */
+    /* Ensure transition is applied here as well */
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out;
+}
+
+/* ADDED/VERIFIED: Hover effect for agent cards */
+.agent-card:hover {
+    transform: translateY(-5px); /* Lift effect */
+    /* Edge lighting effect using box-shadow */
+    box-shadow: 0 8px 40px var(--shadow-color), /* Existing shadow slightly enhanced */
+                0 0 var(--glow-spread) var(--glow-color), /* Inner glow */
+                0 0 calc(var(--glow-spread) * 1.5) var(--glow-color); /* Outer glow */
+    border-color: rgba(0, 170, 255, 0.3); /* Highlight border on hover */
+}
+
+
+/* --- Navbar Styling --- */
+/* ... (Navbar styles remain the same) ... */
+.navbar.glass-navbar { background: var(--glass-bg); border-bottom: 1px solid var(--glass-border); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); box-shadow: 0 2px 15px var(--shadow-color); padding-top: 0.6rem; padding-bottom: 0.6rem; position: fixed; top: 0; left: 0; width: 100%; z-index: 1030; }
+.navbar.glass-navbar .navbar-brand { color: var(--text-color); font-weight: 500; }
+.navbar.glass-navbar .nav-link { color: var(--text-muted-color); transition: color 0.3s ease; }
+.navbar.glass-navbar .nav-link:hover, .navbar.glass-navbar .nav-link.active { color: var(--text-color); }
+.navbar.glass-navbar .navbar-toggler { border-color: var(--glass-border); }
+.navbar.glass-navbar .navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(224, 224, 224, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); }
+.navbar.glass-navbar .dropdown-menu { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--border-radius); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 4px 15px var(--shadow-color); padding: 0.5rem 0; }
+.navbar.glass-navbar .dropdown-item { color: var(--text-muted-color); padding: 0.5rem 1.5rem; transition: background-color 0.2s ease, color 0.2s ease; }
+.navbar.glass-navbar .dropdown-item:hover, .navbar.glass-navbar .dropdown-item:focus { background-color: rgba(255, 255, 255, 0.05); color: var(--text-color); }
+.navbar.glass-navbar .dropdown-divider { border-top: 1px solid var(--glass-border); }
+.navbar.glass-navbar .search-input { background-color: rgba(255, 255, 255, 0.08); border-color: var(--glass-border); color: var(--text-color); max-width: 300px; }
+.navbar.glass-navbar .search-input:focus { background-color: rgba(255, 255, 255, 0.1); border-color: var(--primary-color); box-shadow: 0 0 0 0.15rem rgba(0, 170, 255, 0.25); }
+.navbar.glass-navbar .search-input::placeholder { color: var(--text-muted-color); opacity: 0.6; }
+.navbar.glass-navbar .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.9rem; }
+.navbar.glass-navbar .search-button { padding: 0.3rem 0.6rem; line-height: 1; }
+.navbar.glass-navbar .btn-outline-primary { color: var(--primary-color); border-color: var(--primary-color); }
+.navbar.glass-navbar .btn-outline-primary:hover { background-color: var(--primary-color); color: #fff; box-shadow: 0 0 var(--glow-spread) var(--glow-color); }
+.navbar.glass-navbar .btn-outline-secondary { color: var(--text-muted-color); border-color: var(--glass-border); }
+.navbar.glass-navbar .btn-outline-secondary:hover { background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); color: var(--text-color); }
+.navbar.glass-navbar .cart-button { line-height: 1; }
+.navbar.glass-navbar .cart-button .badge { font-size: 0.65em; }
+
+
+/* --- Form Styling --- */
+/* ... (Form styles remain the same) ... */
+.form-control { background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: var(--text-color); border-radius: var(--border-radius); padding: 0.75rem 1rem; transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease; }
+.form-control-lg { padding: 0.9rem 1.1rem; font-size: 1.1rem; }
+.form-control:focus { background-color: rgba(255, 255, 255, 0.08); border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 170, 255, 0.25); color: var(--text-color); }
+.form-control::placeholder { color: var(--text-muted-color); opacity: 0.7; }
+.form-field-wrapper .form-text { font-size: 0.85em; color: var(--text-muted-color); margin-top: 0.25rem; margin-bottom: 0.5rem; }
+.form-field-wrapper .invalid-feedback { font-size: 0.85em; color: #dc3545; margin-top: 0.25rem; }
+.form-control.is-invalid { border-color: #dc3545; }
+.form-control.is-invalid:focus { box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); }
+
+
+/* --- Button Styling --- */
+/* ... (Button styles remain the same) ... */
+.btn { border-radius: var(--border-radius); padding: 0.75rem 1.5rem; font-weight: 500; transition: all 0.3s ease; position: relative; overflow: hidden; border: 1px solid transparent; box-shadow: none; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); color: #ffffff; }
+.btn-primary:hover, .btn-primary:focus { background-color: var(--primary-hover-color); border-color: var(--primary-hover-color); color: #ffffff; box-shadow: 0 0 var(--glow-spread) var(--glow-color), 0 0 calc(var(--glow-spread) * 2) var(--glow-color); }
+.btn-secondary { background-color: rgba(255, 255, 255, 0.1); border-color: var(--glass-border); color: var(--text-color); }
+.btn-secondary:hover, .btn-secondary:focus { background-color: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); color: var(--text-color); box-shadow: 0 0 var(--glow-spread) rgba(255, 255, 255, 0.3), 0 0 calc(var(--glow-spread) * 2) rgba(255, 255, 255, 0.2); }
+
+
+/* --- Alert Styling --- */
+/* ... (Alert styles remain the same) ... */
+.alert { border-radius: var(--border-radius); border: 1px solid transparent; color: var(--text-color); }
+.alert-success { background-color: rgba(25, 135, 84, 0.3); border-color: rgba(25, 135, 84, 0.5); color: #d1e7dd; }
+.alert-info { background-color: rgba(13, 202, 240, 0.3); border-color: rgba(13, 202, 240, 0.5); color: #cff4fc; }
+.alert-warning { background-color: rgba(255, 193, 7, 0.3); border-color: rgba(255, 193, 7, 0.5); color: #fff3cd; }
+.alert-danger, .alert-error { background-color: rgba(220, 53, 69, 0.3); border-color: rgba(220, 53, 69, 0.5); color: #f8d7da; }
+
+
+/* --- Footer Styling --- */
+/* ... (Footer styles remain the same) ... */
+.footer { background-color: transparent; padding: 2rem 0; color: var(--text-muted-color); font-size: 0.9rem; margin-top: auto; border-top: 1px solid var(--glass-border); }
+.footer-social-links a.footer-icon-link { color: var(--text-muted-color); font-size: 1.5rem; margin: 0 0.75rem; text-decoration: none; transition: color 0.3s ease, transform 0.2s ease; display: inline-block; }
+.footer-social-links a.footer-icon-link:hover { color: var(--primary-color); transform: translateY(-2px); }
+.footer .small { font-size: 0.85em; }
+.footer a.text-muted-color:hover { color: var(--text-color) !important; }
+
+
+/* --- Homepage Specific Styles --- */
+/* ... (Homepage styles remain the same) ... */
+.hero-section { min-height: 70vh; display: flex; align-items: center; }
+.image-container { border-radius: var(--border-radius); min-height: 300px; display: flex; align-items: center; justify-content: center; height: 100%; overflow: hidden; padding: 0; }
+.hero-panel { padding: 2rem 1rem; }
+@media (min-width: 992px) { .hero-panel { padding: 3rem; } .hero-panel .image-container { min-height: 350px; } }
+
+
+/* Login/Register Card Styling */
+.auth-card { max-width: 450px; margin: 3rem auto; }
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) { main { padding-top: 70px; } .hero-section { text-align: center; } .image-container { margin-top: 2rem; min-height: 250px; } }
+@media (max-width: 767.98px) { .glass-panel { padding: 1.5rem; } .auth-card { margin: 2rem auto; padding: 1.5rem; } }

@@ -14,11 +14,12 @@
                     Discover agents and tools built by the community to help with various tasks.
                 </p>
 
-                {# UPDATED: Loop through agents from the database view #}
+                {# Loop through agents from the database view #}
                 {% if agents %}
                     <div class="row g-4">
                         {% for agent in agents %}
-                            <div class="col-sm-6 col-md-4 col-lg-3">
+                            {# UPDATED: Changed col-lg-3 to col-lg-4 to make cards bigger #}
+                            <div class="col-sm-6 col-md-6 col-lg-4"> {# 2 on small/medium, 3 on large #}
                                 {# Pass the agent object to the partial template #}
                                 {% include "partials/agent_card.html" with agent=agent %}
                             </div>
