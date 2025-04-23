@@ -7,47 +7,67 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-lg-11 col-xl-10"> {# Made slightly wider for more cards #}
+        <div class="col-lg-11 col-xl-10"> {# Made slightly wider #}
             <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
                 <h1 class="display-6 fw-bold mb-4">Explore AI Agents & Tools</h1>
                 <p class="text-muted-color mb-5">
                     Discover agents and tools built by the community to help with various tasks.
                 </p>
 
-                {# Hardcoded Agent/Tool Cards - Replace with loop later #}
-                <div class="row g-4">
+                {# UPDATED: Loop through agents from the database view #}
+                {% if agents %}
+                    <div class="row g-4">
+                        {% for agent in agents %}
+                            <div class="col-sm-6 col-md-4 col-lg-3">
+                                {# Pass the agent object to the partial template #}
+                                {% include "partials/agent_card.html" with agent=agent %}
+                            </div>
+                        {% endfor %}
+                    </div>
 
-                    {# --- Text & Content Generation --- #}
-                    {% with tool_name="Blog Post Idea Generator" tool_desc="Input: Topic/Keywords" tool_url_name="agentify:blog_idea_generator" img_name="blog_ideas_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Product Description Writer" tool_desc="Input: Features, Audience" tool_url_name="agentify:product_description_writer" img_name="product_desc_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Social Media Post Creator" tool_desc="Input: Link/Topic" tool_url_name="agentify:social_media_post_creator" img_name="social_post_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Email Subject Line Generator" tool_desc="Input: Email Body Snippet" tool_url_name="agentify:email_subject_generator" img_name="email_subject_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Meeting Summarizer" tool_desc="Input: Transcript/Notes" tool_url_name="agentify:meeting_summarizer" img_name="summary_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
+                    {# Optional: Pagination Controls #}
+                    {% if is_paginated %}
+                        <nav aria-label="Agent pagination" class="mt-5 d-flex justify-content-center">
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                                    </li>
+                                {% endif %}
 
-                    {# --- Data & Analysis --- #}
-                    {% with tool_name="Sentiment Analysis Agent" tool_desc="Input: Text Block" tool_url_name="agentify:sentiment_analysis" img_name="sentiment_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Keyword Extractor" tool_desc="Input: Document/Text" tool_url_name="agentify:keyword_extractor" img_name="keywords_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Data Anonymizer" tool_desc="Input: Structured Data" tool_url_name="agentify:data_anonymizer" img_name="anonymize_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Trend Spotter" tool_desc="Input: Data Stream/Source" tool_url_name="agentify:trend_spotter" img_name="trends_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
+                                {% for i in paginator.page_range %}
+                                    {% if page_obj.number == i %}
+                                        <li class="page-item active" aria-current="page"><span class="page-link">{{ i }}</span></li>
+                                    {% else %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
 
-                    {# --- Coding & Development --- #}
-                    {% with tool_name="Code Explainer" tool_desc="Input: Code Snippet" tool_url_name="agentify:code_explainer" img_name="code_explain_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Regex Generator" tool_desc="Input: Pattern Description" tool_url_name="agentify:regex_generator" img_name="regex_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Docstring Writer" tool_desc="Input: Function/Class Code" tool_url_name="agentify:docstring_writer" img_name="docstring_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="API Request Formatter" tool_desc="Input: Endpoint Details" tool_url_name="agentify:api_request_formatter" img_name="api_request_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                     <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
 
-                    {# --- Image & Design --- #}
-                    {% with tool_name="Image Alt Text Generator" tool_desc="Input: Image Upload/URL" tool_url_name="agentify:image_alt_text_generator" img_name="alt_text_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Color Palette Suggester" tool_desc="Input: Base Color/Image" tool_url_name="agentify:color_palette_suggester" img_name="palette_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Basic Logo Idea Generator" tool_desc="Input: Company Name, Industry" tool_url_name="agentify:logo_idea_generator" img_name="logo_idea_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
+                {% else %}
+                    <p class="text-center text-muted-color">No agents available in the marketplace yet. Add some via the admin!</p>
+                {% endif %}
 
-                    {# --- Utilities & Miscellaneous --- #}
-                    {% with tool_name="Language Translator" tool_desc="Input: Text, Target Language" tool_url_name="agentify:language_translator" img_name="translate_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Grammar & Spell Checker" tool_desc="Input: Text Block" tool_url_name="agentify:grammar_checker" img_name="grammar_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Unit Converter" tool_desc="Input: Value, From/To Units" tool_url_name="agentify:unit_converter" img_name="converter_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-                    {% with tool_name="Simple Q&A Bot" tool_desc="Input: Context, Question" tool_url_name="agentify:simple_qa_bot" img_name="qa_bot_illustration.png" %} <div class="col-sm-6 col-md-4 col-lg-3"> {% include "partials/agent_card.html" %} </div> {% endwith %}
-
-                </div>
             </div> {# End Main Panel #}
         </div> {# End Column #}
     </div> {# End Row #}
