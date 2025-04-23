@@ -1,0 +1,36 @@
+{# templates/home.html #}
+{% extends "base.html" %}
+{% load static %}
+<link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+{% block title %}Welcome - AI Agent Marketplace{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row hero-section align-items-center"> {# Use hero-section class #}
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="glass-panel"> {# Apply glass effect to text panel #}
+                <h1 class="display-4 fw-bold mb-3">Build, Share, Utilize AI Agents</h1>
+                <p class="fs-5 mb-4 lead text-muted-color">
+                    Step into the future with our marketplace. Discover pre-built agents or unleash your creativity by building your own.
+                </p>
+                {% if user.is_authenticated %}
+                    <a href="#" class="btn btn-primary btn-lg">Explore Agents</a> {# Placeholder #}
+                {% else %}
+                    <a href="{% url 'users_api:auth_register' %}" class="btn btn-primary btn-lg me-2">Get Started</a>
+                    <a href="{% url 'users_api:auth_login' %}" class="btn btn-secondary btn-lg">Login</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="illustration-placeholder">
+                <p>Your awesome illustration goes here!</p>
+                </div>
+        </div>
+    </div>
+
+    {# Optional: Add more sections below if needed #}
+    </div>
+{% endblock content %}
+

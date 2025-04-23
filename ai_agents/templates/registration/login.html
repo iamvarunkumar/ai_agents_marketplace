@@ -1,0 +1,45 @@
+{# templates/registration/login.html #}
+{% extends "base.html" %} {# Assumes base.html is in templates/ #}
+{% load static %} {# Load static tag library #}
+
+{% block title %}Login{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-5">
+            {# Apply glassmorphism styling to the card #}
+            <div class="glass-panel auth-card mt-5 mb-5"> {# Added mb-5 for spacing #}
+                <h2 class="text-center mb-4 fw-bold">Login</h2>
+
+                {# Display non-field errors or general messages from Django messages framework #}
+                {# Field-specific errors will be displayed by {{ form.as_p }} #}
+
+                <form id="login-form" method="post" action="{% url 'login_page' %}"> {# Action points to the login view URL #}
+                    {% csrf_token %}
+
+                    {# Render the form fields as paragraphs #}
+                    {# This will include labels, inputs, and validation errors #}
+                    {{ form.as_p }}
+
+                    {# Hidden field for 'next' URL redirection after login #}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+
+                    <div class="d-grid mt-4"> {# Use d-grid for full-width button #}
+                        <button type="submit" class="btn btn-primary btn-lg">Login</button>
+                    </div>
+                </form>
+
+                <p class="text-center mt-4 mb-0 text-muted-color">
+                    Don't have an account?
+                    {# Use url tag to link to the registration page view #}
+                    <a href="{% url 'register_page' %}" class="fw-bold text-decoration-none link-light">Register here</a>
+                </p>
+                 {# Optional: Add forgot password link #}
+                </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

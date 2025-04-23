@@ -1,0 +1,96 @@
+{# templates/base.html #}
+{% load static %} {# Load static tag library #}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+    <title>{% block title %}AI Agent Marketplace{% endblock title %}</title>
+
+    {% block extra_head %}
+    {% endblock extra_head %}
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg glass-navbar"> {# Added glass-navbar class #}
+        <div class="container">
+            {# Use url tag for dynamic URLs if defined in urls.py #}
+            <a class="navbar-brand" href="{% url 'home' %}">
+                AI Agents Hub
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center"> {# Added align-items-center #}
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Dashboard</a> {# Placeholder URL #}
+                        </li>
+                         <li class="nav-item">
+                            <a class="nav-link" href="#">My Agents</a> {# Placeholder URL #}
+                        </li>
+                        <li class="nav-item dropdown">
+                           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                               {{ user.email|default:user.username }} {# Display email or username #}
+                           </a>
+                           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                               <li><a class="dropdown-item" href="#">Profile</a></li> {# Placeholder URL #}
+                               <li><hr class="dropdown-divider"></li>
+                               <li><button class="dropdown-item" id="logout-button">Logout</button></li>
+                           </ul>
+                       </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users_api:auth_login' %}">Login</a> {# Use URL name #}
+                        </li>
+                        <li class="nav-item">
+                             {# Use a button style for Register #}
+                            <a class="btn btn-primary btn-sm ms-2" href="{% url 'users_api:auth_register' %}">Register</a> {# Use URL name #}
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        {# Display Django messages framework messages if used #}
+        {% if messages %}
+            <div class="container mt-3"> {# Add container for messages #}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    <footer class="footer"> {# Added footer class #}
+        <div class="container text-center">
+            <span>© {% now "Y" %} AI Agent Marketplace - ENIGMA Project</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script src="{% static 'js/script.js' %}"></script>
+
+    <script src="{% static 'js/auth.js' %}"></script>
+
+    {% block extra_scripts %}
+    {% endblock extra_scripts %}
+
+</body>
+</html>
+
