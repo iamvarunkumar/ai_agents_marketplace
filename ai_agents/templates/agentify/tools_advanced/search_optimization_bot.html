@@ -1,0 +1,54 @@
+{# templates/agentify/tools/search_optimization_bot.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Get on-page SEO tips." }}</p>{% else %}<p class="text-muted-color">Get on-page SEO tips.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/seo_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                     <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="contentTypeInput" class="form-label fw-bold">Content Type:</label>
+                            <input type="text" class="form-control" id="contentTypeInput" name="content_type" placeholder="e.g., Blog Post, Product Page" value="{{ submitted_type|default:'Blog Post' }}" required>
+                        </div>
+                         <div class="col-md-6">
+                            <label for="keywordsInput" class="form-label fw-bold">Target Keywords:</label>
+                            <input type="text" class="form-control" id="keywordsInput" name="keywords" placeholder="e.g., best travel backpack, AI marketing tools" value="{{ submitted_keywords|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-search-heart-fill me-2"></i>Get SEO Tips</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if seo_tips is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">On-Page SEO Tips:</h2>
+                        <div class="glass-panel nested-panel p-4">
+                           {# Use safe filter because seo_tips contains HTML from Markdown #}
+                           {{ seo_tips|default:"<p>Could not generate tips.</p>"|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel p:last-child, .nested-panel ul:last-child, .nested-panel ol:last-child { margin-bottom: 0; } .nested-panel ul, .nested-panel ol { padding-left: 1.5rem; } .nested-panel h2, .nested-panel h3 { margin-top: 1rem; color: var(--primary-color); }</style>{% endblock extra_head %}

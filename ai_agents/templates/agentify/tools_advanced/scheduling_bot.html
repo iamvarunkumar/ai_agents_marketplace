@@ -1,0 +1,53 @@
+{# templates/agentify/tools/scheduling_bot.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Get suggestions for automating scheduling tasks." }}</p>{% else %}<p class="text-muted-color">Get suggestions for automating scheduling tasks.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/schedule_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="scheduleTypeInput" class="form-label fw-bold">Type of Scheduling:</label>
+                        <input type="text" class="form-control" id="scheduleTypeInput" name="schedule_type" placeholder="e.g., Meeting with multiple attendees, Client appointment booking" value="{{ submitted_type|default:'Meeting with multiple attendees' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="constraintsInput" class="form-label fw-bold">Key Constraints (Optional):</label>
+                        <textarea class="form-control" id="constraintsInput" name="constraints" rows="3" placeholder="e.g., Check multiple calendars, Consider time zones, Allow buffer time">{{ submitted_constraints|default:'' }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-calendar-check-fill me-2"></i>Suggest Scheduling Solutions</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if scheduling_suggestions is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Scheduling Suggestions:</h2>
+                        <div class="glass-panel nested-panel p-4">
+                           {# Use safe filter because suggestions contain HTML from Markdown #}
+                           {{ scheduling_suggestions|default:"<p>Could not generate suggestions.</p>"|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel p:last-child, .nested-panel ul:last-child, .nested-panel ol:last-child { margin-bottom: 0; } .nested-panel ul, .nested-panel ol { padding-left: 1.5rem; } .nested-panel h2, .nested-panel h3 { margin-top: 1rem; color: var(--primary-color); } .nested-panel code { background-color: rgba(255,255,255,0.1); padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.9em;} .nested-panel pre code { display: block; background-color: rgba(0,0,0,0.3); padding: 1em; border-radius: var(--border-radius); white-space: pre-wrap; word-wrap: break-word; }</style>{% endblock extra_head %}
+

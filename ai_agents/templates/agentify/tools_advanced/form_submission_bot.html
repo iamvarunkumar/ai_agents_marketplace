@@ -1,0 +1,59 @@
+{# templates/agentify/tools/form_submission_bot.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Get code examples for handling form submissions." }}</p>{% else %}<p class="text-muted-color">Get code examples for handling form submissions.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/form_submit_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="formFieldsInput" class="form-label fw-bold">Form Fields (comma-separated):</label>
+                        <input type="text" class="form-control" id="formFieldsInput" name="form_fields" placeholder="e.g., name, email, subject, message" value="{{ submitted_fields|default:'name, email, message' }}" required>
+                    </div>
+                     <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="backendLangInput" class="form-label fw-bold">Backend Language/Framework:</label>
+                            <input type="text" class="form-control" id="backendLangInput" name="backend_lang" placeholder="e.g., Django, Flask, Node.js/Express" value="{{ submitted_lang|default:'Django' }}" required>
+                        </div>
+                         <div class="col-md-6">
+                            <label for="actionInput" class="form-label fw-bold">Action on Submission:</label>
+                            <input type="text" class="form-control" id="actionInput" name="action" placeholder="e.g., Save to DB, Send Email, Call API" value="{{ submitted_action|default:'Save to DB and Send Email' }}" required>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-code-square me-2"></i>Generate Code Example</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if handling_code is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Example Code:</h2>
+                        <div class="glass-panel nested-panel p-4">
+                           {# Use safe filter because handling_code contains HTML from Markdown #}
+                           {{ handling_code|default:"<p>Could not generate code.</p>"|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel p:last-child, .nested-panel ul:last-child, .nested-panel ol:last-child { margin-bottom: 0; } .nested-panel ul, .nested-panel ol { padding-left: 1.5rem; } .nested-panel h2, .nested-panel h3 { margin-top: 1rem; color: var(--primary-color); } .nested-panel code { background-color: rgba(255,255,255,0.1); padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.9em;} .nested-panel pre code { display: block; background-color: rgba(0,0,0,0.3); padding: 1em; border-radius: var(--border-radius); white-space: pre-wrap; word-wrap: break-word; }</style>{% endblock extra_head %}
+

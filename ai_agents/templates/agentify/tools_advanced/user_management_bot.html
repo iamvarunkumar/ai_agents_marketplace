@@ -1,0 +1,53 @@
+{# templates/agentify/tools/user_management_bot.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Get outlines for user management flows." }}</p>{% else %}<p class="text-muted-color">Get outlines for user management flows.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/user_management_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="flowTypeSelect" class="form-label fw-bold">Select User Flow Type:</label>
+                        <select class="form-select" id="flowTypeSelect" name="flow_type">
+                            <option value="registration" {% if not selected_flow or selected_flow == 'registration' %}selected{% endif %}>Registration</option>
+                            <option value="password_reset" {% if selected_flow == 'password_reset' %}selected{% endif %}>Password Reset</option>
+                            <option value="profile_update" {% if selected_flow == 'profile_update' %}selected{% endif %}>Profile Update</option>
+                            <option value="account_deletion" {% if selected_flow == 'account_deletion' %}selected{% endif %}>Account Deletion</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-diagram-3-fill me-2"></i>Generate Flow Outline</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if generated_flow is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Flow Outline for {{ selected_flow|default:'Selected'|title|replace:"_"," " }}:</h2>
+                        <div class="glass-panel nested-panel p-4">
+                             {# Use safe filter because generated_flow contains HTML from Markdown #}
+                            {{ generated_flow|default:"<p>Could not generate outline.</p>"|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel p:last-child { margin-bottom: 0; } .nested-panel ul, .nested-panel ol { padding-left: 1.5rem; } .nested-panel h2, .nested-panel h3 { margin-top: 1rem; color: var(--primary-color); }</style>{% endblock extra_head %}

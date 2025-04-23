@@ -1,0 +1,62 @@
+{# templates/agentify/tools/performance_monitoring_bot.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Get tips for website/app performance monitoring." }}</p>{% else %}<p class="text-muted-color">Get tips for website/app performance monitoring.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/performance_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="siteTypeInput" class="form-label fw-bold">Application Type:</label>
+                            <input type="text" class="form-control" id="siteTypeInput" name="site_type" placeholder="e.g., Django Web App, React SPA, API Backend" value="{{ submitted_type|default:'Django Web App' }}" required>
+                        </div>
+                         <div class="col-md-6">
+                            <label for="metricInput" class="form-label fw-bold">Metric to Monitor:</label>
+                            <input type="text" class="form-control" id="metricInput" name="metric" placeholder="e.g., Page Load Time, DB Query Count, Error Rate" value="{{ submitted_metric|default:'Load Time' }}" required>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-speedometer2 me-2"></i>Get Monitoring Tips</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if monitoring_tips is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Monitoring Tips for {{ submitted_metric }} on {{ submitted_type }}:</h2>
+                        {% if monitoring_tips %}
+                            <div class="glass-panel nested-panel p-3">
+                                <ul class="list-unstyled ps-3">
+                                    {% for tip in monitoring_tips %}
+                                    <li class="mb-2"><i class="bi bi-check-circle me-2 text-success"></i>{{ tip }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% else %}
+                            <p class="text-muted-color">Could not generate monitoring tips.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel ul li { line-height: 1.7; }</style>{% endblock extra_head %}
+

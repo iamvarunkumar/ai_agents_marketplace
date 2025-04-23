@@ -1,0 +1,55 @@
+{# templates/agentify/tools/email_notification_bot.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Get guidance on setting up email notifications." }}</p>{% else %}<p class="text-muted-color">Get guidance on setting up email notifications.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/email_alert_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                     <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="triggerEventInput" class="form-label fw-bold">Trigger Event:</label>
+                            <input type="text" class="form-control" id="triggerEventInput" name="trigger_event" placeholder="e.g., New User Signup, Order Confirmation" value="{{ submitted_event|default:'New User Signup' }}" required>
+                        </div>
+                         <div class="col-md-6">
+                            <label for="platformInput" class="form-label fw-bold">Platform/Language:</label>
+                            <input type="text" class="form-control" id="platformInput" name="platform" placeholder="e.g., Django, Node.js, Python Script" value="{{ submitted_platform|default:'Django' }}" required>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-envelope-arrow-up-fill me-2"></i>Get Setup Guide</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if setup_guide is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Setup Guide / Examples:</h2>
+                        <div class="glass-panel nested-panel p-4">
+                           {# Use safe filter because setup_guide contains HTML from Markdown #}
+                           {{ setup_guide|default:"<p>Could not generate setup guide.</p>"|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel p:last-child, .nested-panel ul:last-child, .nested-panel ol:last-child { margin-bottom: 0; } .nested-panel ul, .nested-panel ol { padding-left: 1.5rem; } .nested-panel h2, .nested-panel h3 { margin-top: 1rem; color: var(--primary-color); } .nested-panel code { background-color: rgba(255,255,255,0.1); padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.9em;} .nested-panel pre code { display: block; background-color: rgba(0,0,0,0.3); padding: 1em; border-radius: var(--border-radius); white-space: pre-wrap; word-wrap: break-word; }</style>{% endblock extra_head %}
+

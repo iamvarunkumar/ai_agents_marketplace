@@ -1,0 +1,55 @@
+{# templates/agentify/tools/data_entry_bot.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Suggest ways to automate data entry tasks." }}</p>{% else %}<p class="text-muted-color">Suggest ways to automate data entry tasks.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/data_entry_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                     <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="dataSourceInput" class="form-label fw-bold">Data Source:</label>
+                            <input type="text" class="form-control" id="dataSourceInput" name="data_source" placeholder="e.g., PDF Invoices, Web Form, Scanned Documents" value="{{ submitted_source|default:'Invoices' }}" required>
+                        </div>
+                         <div class="col-md-6">
+                            <label for="dataDestInput" class="form-label fw-bold">Data Destination:</label>
+                            <input type="text" class="form-control" id="dataDestInput" name="data_destination" placeholder="e.g., Database, CRM, Google Sheet" value="{{ submitted_dest|default:'Database' }}" required>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-robot me-2"></i>Suggest Automation</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if automation_ideas is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Automation Ideas:</h2>
+                        <div class="glass-panel nested-panel p-4">
+                           {# Use safe filter because automation_ideas contains HTML from Markdown #}
+                           {{ automation_ideas|default:"<p>Could not generate ideas.</p>"|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel p:last-child, .nested-panel ul:last-child, .nested-panel ol:last-child { margin-bottom: 0; } .nested-panel ul, .nested-panel ol { padding-left: 1.5rem; } .nested-panel h2, .nested-panel h3 { margin-top: 1rem; color: var(--primary-color); }</style>{% endblock extra_head %}
+

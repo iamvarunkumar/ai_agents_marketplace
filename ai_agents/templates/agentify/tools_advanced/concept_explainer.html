@@ -1,0 +1,56 @@
+{# templates/agentify/tools/concept_explainer.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Explain complex concepts simply." }}</p>{% else %}<p class="text-muted-color">Explain complex concepts simply.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/concept_explain_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                     <div class="mb-3">
+                        <label for="conceptInput" class="form-label fw-bold">Concept to Explain:</label>
+                        <input type="text" class="form-control form-control-lg" id="conceptInput" name="concept" placeholder="e.g., Quantum Entanglement, Blockchain, Photosynthesis" value="{{ submitted_concept|default:'' }}" required>
+                    </div>
+                     <div class="mb-3">
+                        <label for="audienceSelect" class="form-label fw-bold">Explain For:</label>
+                        <select class="form-select" id="audienceSelect" name="audience">
+                            <option value="beginner" {% if not selected_audience or selected_audience == 'beginner' %}selected{% endif %}>Beginner / Child</option>
+                            <option value="intermediate" {% if selected_audience == 'intermediate' %}selected{% endif %}>Intermediate / Student</option>
+                            <option value="expert" {% if selected_audience == 'expert' %}selected{% endif %}>Expert</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-info-circle-fill me-2"></i>Explain Concept</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                 {% if explanation is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Explanation for "{{ submitted_concept }}":</h2>
+                        <div class="glass-panel nested-panel p-4">
+                             {# Use safe filter because explanation contains HTML from Markdown #}
+                            {{ explanation|default:"<p>Could not generate explanation.</p>"|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel p:last-child { margin-bottom: 0; }</style>{% endblock extra_head %}

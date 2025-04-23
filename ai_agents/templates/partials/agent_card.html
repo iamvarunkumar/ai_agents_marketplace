@@ -6,25 +6,25 @@
 <div class="glass-panel h-100 p-3 d-flex flex-column agent-card position-relative"> {# Added position-relative #}
 
     {# Tier Badge (Top Right) #}
-    {# UPDATED: Correct logic to show BASIC badge #}
-    {% if agent.tier == agent.TIER_BASIC %}
-        {# Use a different style for Basic, e.g., info or primary #}
-        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info text-dark" style="font-size: 0.7em; margin-top: 10px; margin-right: 5px;">
-            Basic {# Display 'Basic' text #}
+    {# UPDATED: Added check for Pro tier #}
+    {% if agent.tier == agent.TIER_PRO %}
+         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success text-white" style="font-size: 0.7em; margin-top: 10px; margin-right: 5px;">
+            Pro
         </span>
-     {% elif agent.tier == agent.TIER_ADVANCED %} {# Optional: Keep styling for Advanced if needed #}
-         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" style="font-size: 0.7em; margin-top: 10px; margin-right: 5px;">
+    {% elif agent.tier == agent.TIER_ADVANCED %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" style="font-size: 0.7em; margin-top: 10px; margin-right: 5px;">
             Advanced
         </span>
-    {% endif %}
+    {% elif agent.tier == agent.TIER_BASIC %}
+         {# Optional: Show Basic badge or no badge for Basic #}
+         {% endif %}
 
 
     {# Illustration Placeholder #}
     <div class="agent-card-illustration mb-3 text-center">
-        {# Use illustration field from agent model, provide default #}
         <img src="{% if agent.illustration %}{% static 'images/'|add:agent.illustration %}{% else %}{% static 'images/default_tool_icon.png' %}{% endif %}" {# Fallback image #}
-             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'illustration-placeholder-small\'></div>';" {# Basic fallback if image missing #}
-             alt="{{ agent.name|default:'Agent' }} Illustration" {# Use agent name in alt text #}
+             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'illustration-placeholder-small\'></div>';" {# Basic fallback #}
+             alt="{{ agent.name|default:'Agent' }} Illustration"
              class="img-fluid rounded"
              style="max-height: 80px; height: 80px; width: auto; margin: auto; opacity: 0.7;">
     </div>
@@ -37,25 +37,13 @@
 
     {# Link to the tool page - Use agent's get_absolute_url method #}
     <a href="{{ agent.get_absolute_url }}"
-       class="btn btn-sm btn-outline-primary mt-auto stretched-link {% if agent.get_absolute_url == '#' %}disabled{% endif %}"> {# Disable button if URL is '#' #}
+       class="btn btn-sm btn-outline-primary mt-auto stretched-link {% if agent.get_absolute_url == '#' %}disabled{% endif %}">
         Use Tool
     </a>
 </div>
 
 {# Styles specific to this partial (can be moved to main CSS) #}
 <style>
-.agent-card-illustration {
-    height: 90px; /* Fixed height for consistency */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.illustration-placeholder-small { /* Style for the onerror fallback */
-    width: 60px;
-    height: 60px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px dashed var(--glass-border);
-    border-radius: var(--border-radius);
-    margin: auto;
-}
+.agent-card-illustration { height: 90px; display: flex; align-items: center; justify-content: center; }
+.illustration-placeholder-small { width: 60px; height: 60px; background-color: rgba(255, 255, 255, 0.05); border: 1px dashed var(--glass-border); border-radius: var(--border-radius); margin: auto; }
 </style>

@@ -15,6 +15,7 @@ urlpatterns = [
     path('dashboard/', user_views.dashboard_view, name='dashboard_view'),
     path('agents/', include('apps.agentify.urls', namespace='agentify')),
     path('admin/', admin.site.urls),# Name is 'dashboard_view'
+    path('agents/', include('apps.agentify.urls', namespace='agentify')),
 
     # --- Admin Site ---
     # path('admin/', admin.site.urls), # Still commented out

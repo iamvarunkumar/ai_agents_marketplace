@@ -14,7 +14,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap"> {# Added flex-wrap #}
                     <h1 class="display-6 fw-bold mb-2 me-3">{{ agent.name }}</h1> {# Added me-3 #}
 
-                    {# --- UPDATED: Add/Remove Buttons --- #}
+                    {# Add/Remove Buttons #}
                     <div class="agent-actions mb-2">
                         {% if user.is_authenticated %}
                             {% if in_workspace %}
@@ -38,15 +38,17 @@
                             {# Prompt non-logged-in users to login #}
                             <a href="{% url 'login_page' %}?next={{ request.path }}" class="btn btn-outline-primary btn-sm">Login to Add</a>
                         {% endif %}
-                         {# Placeholder Run Button #}
-                        <a href="#" class="btn btn-primary btn-sm ms-2"><i class="bi bi-play-fill me-1"></i>Run Agent</a>
+                         {# Placeholder Run Button - Link to specific tool page if possible #}
+                         <a href="{{ agent.get_absolute_url }}" class="btn btn-primary btn-sm ms-2 {% if agent.get_absolute_url == '#' %}disabled{% endif %}"><i class="bi bi-play-fill me-1"></i>Use Tool</a>
                     </div>
-                     {# --- END UPDATED Buttons --- #}
                 </div>
 
                 {# Agent Metadata #}
                 <div class="mb-4 pb-3 border-bottom border-secondary">
-                    <p class="small text-muted-color mb-1">
+                     <span class="badge me-2 {% if agent.tier == agent.TIER_PRO %}bg-success{% elif agent.tier == agent.TIER_ADVANCED %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">{{ agent.get_tier_display }}</span>
+                     <span class="badge bg-secondary me-2">{{ agent.get_category_display }}</span>
+                     <br class="d-sm-none"> {# Break line on small screens #}
+                     <span class="small text-muted-color mt-1 mt-sm-0 d-inline-block">
                         Created by:
                         {% if agent.creator %}
                             {{ agent.creator.username|default:"Platform" }}
@@ -54,7 +56,7 @@
                             Platform
                         {% endif %}
                          on {{ agent.created_at|date:"M d, Y" }}
-                    </p>
+                    </span>
                 </div>
 
                 {# Agent Description #}
@@ -65,31 +67,40 @@
                     </p>
                 </div>
 
-                {# Placeholder Sections for Input/Output/Usage #}
+                 {# Illustration #}
+                 {% if agent.illustration %}
+                 <div class="mb-4 text-center">
+                     <img src="{% static 'images/'|add:agent.illustration %}" alt="{{ agent.name }} Illustration" class="img-fluid rounded" style="max-height: 150px; opacity: 0.8;">
+                 </div>
+                 {% endif %}
+
+
+                {# Placeholder Sections for Input/Output/Usage if not a specific tool page #}
+                {# You might hide these if agent.get_absolute_url points to a tool page #}
                 <div class="mb-4">
                     <h3 class="h5 fw-bold mb-3">Input Specification</h3>
                     <div class="glass-panel p-3 nested-panel"> {# Nested panel example #}
-                        <p class="small text-muted-color mb-0"><em>Input details will be shown here (e.g., required format, example).</em></p>
+                        <p class="small text-muted-color mb-0"><em>Input details will be shown here.</em></p>
                     </div>
                 </div>
 
                 <div class="mb-4">
                     <h3 class="h5 fw-bold mb-3">Output Specification</h3>
                      <div class="glass-panel p-3 nested-panel">
-                        <p class="small text-muted-color mb-0"><em>Output details will be shown here (e.g., format, example).</em></p>
+                        <p class="small text-muted-color mb-0"><em>Output details will be shown here.</em></p>
                     </div>
                 </div>
 
                  <div class="mb-4">
                     <h3 class="h5 fw-bold mb-3">Example Usage</h3>
                      <div class="glass-panel p-3 nested-panel">
-                        <p class="small text-muted-color mb-0"><em>Code snippets or instructions on how to use the agent will appear here.</em></p>
+                        <p class="small text-muted-color mb-0"><em>Usage instructions will appear here.</em></p>
                     </div>
                 </div>
 
                 {# Back Link #}
                 <div class="mt-4 text-center">
-                    <a href="{% url 'agentify:agent_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <a href="{% url 'agentify:agent_list_basic' %}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-arrow-left me-1"></i> Back to Agent List
                     </a>
                 </div>
@@ -100,28 +111,18 @@
 </div>
 {% endblock content %}
 
-{% block extra_scripts %}
-{# Add any JavaScript specific to the agent detail page here if needed #}
-{% endblock extra_scripts %}
-
 {% block extra_head %}
-{# Add specific CSS if needed for nested panels etc. #}
+{# Add specific CSS if needed #}
 <style>
     .nested-panel {
         background-color: rgba(0,0,0, 0.15) !important; /* Darker nested panel */
         backdrop-filter: blur(5px); /* Less blur */
         -webkit-backdrop-filter: blur(5px);
-    }
-    pre { /* Basic styling for code blocks if used */
-        background-color: rgba(0,0,0, 0.3);
-        padding: 1rem;
-        border-radius: var(--border-radius);
-        color: var(--text-color);
-        white-space: pre-wrap; /* Wrap long lines */
-        word-wrap: break-word;
+        border-color: rgba(255, 255, 255, 0.1) !important;
     }
     .agent-actions form { /* Ensure forms display inline */
         margin: 0;
+        display: inline-block; /* Make forms inline */
     }
 </style>
 {% endblock extra_head %}

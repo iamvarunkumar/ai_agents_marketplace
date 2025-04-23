@@ -1,0 +1,72 @@
+
+{# templates/agentify/tools/chat_reply_draft.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Draft helpful chat replies." }}</p>{% else %}<p class="text-muted-color">Draft helpful chat replies.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/chat_reply_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                     <div class="mb-3">
+                        <label for="scenarioInput" class="form-label fw-bold">Scenario:</label>
+                        <input type="text" class="form-control" id="scenarioInput" name="scenario" placeholder="e.g., Customer asks for refund, User reports bug, Inquiry about pricing" value="{{ submitted_scenario|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastMessageInput" class="form-label fw-bold">Last Message Received:</label>
+                        <textarea class="form-control" id="lastMessageInput" name="last_message" rows="4" placeholder="Paste the last message from the user here..." required>{{ submitted_message|default:'' }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-chat-dots-fill me-2"></i>Draft Reply</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if generated_reply is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Reply Draft:</h2>
+                        <div class="glass-panel nested-panel p-3 d-flex justify-content-between align-items-start">
+                            <p class="reply-output mb-0 me-3">{{ generated_reply|default:"Could not generate reply."|linebreaksbr }}</p>
+                            <button class="btn btn-sm btn-outline-secondary copy-btn flex-shrink-0" title="Copy reply" data-text="{{ generated_reply }}">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .copy-btn { opacity: 0.6; transition: opacity 0.2s ease-in-out; } .copy-btn:hover { opacity: 1; } .copy-btn.copied { opacity: 1; color: var(--bs-success); border-color: var(--bs-success); }</style>{% endblock extra_head %}
+{% block extra_scripts %}
+<script>
+    // Basic Copy Button Functionality
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const textToCopy = button.dataset.text;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalIcon = button.innerHTML;
+                    button.innerHTML = '<i class="bi bi-clipboard-check-fill"></i>'; button.classList.add('copied');
+                    setTimeout(() => { button.innerHTML = originalIcon; button.classList.remove('copied'); }, 1500);
+                }).catch(err => { console.error('Failed to copy: ', err); alert('Failed to copy text.'); });
+            });
+        });
+    });
+</script>
+{% endblock extra_scripts %}

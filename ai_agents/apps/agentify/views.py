@@ -10,6 +10,10 @@ from .models import Agent # Import the Agent model
 import google.generativeai as genai
 import os
 from django.conf import settings
+from collections import defaultdict
+import markdown
+import re
+
 
 try:
     GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -40,42 +44,131 @@ def parse_ai_list_response(text_response):
             cleaned_items.append(item)
     return cleaned_items
 
+class BaseAgentListView(ListView):
+    """Base class for agent list views to handle categorization."""
+    model = Agent
+    paginate_by = 24 # Number of agents per page
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        agents = context['object_list'] # Get agents filtered by get_queryset
+
+        # Group agents by category
+        categorized_agents = defaultdict(list)
+        for agent in agents:
+            categorized_agents[agent.get_category_display()].append(agent)
+
+        context['categorized_agents'] = dict(sorted(categorized_agents.items()))
+        # Add tier constants for potential use in templates
+        context['TIER_BASIC'] = Agent.TIER_BASIC
+        context['TIER_PRO'] = Agent.TIER_PRO
+        context['TIER_ADVANCED'] = Agent.TIER_ADVANCED
+        # Add the specific tier being displayed
+        context['selected_tier'] = self.tier_filter
+        return context
+
+class BasicAgentListView(BaseAgentListView):
+    """Displays Basic Tier Agents."""
+    template_name = 'agentify/agent_list_basic.html' # Use a specific template
+    tier_filter = Agent.TIER_BASIC
+
+    def get_queryset(self):
+        return Agent.objects.filter(is_public=True, tier=self.tier_filter).order_by('category', 'name')
+
+class ProAgentListView(BaseAgentListView):
+    """Displays Pro Tier Agents."""
+    template_name = 'agentify/agent_list_pro.html' # Use a specific template
+    tier_filter = Agent.TIER_PRO
+
+    def get_queryset(self):
+        # Add logic here later to check if user has Pro access if needed
+        return Agent.objects.filter(is_public=True, tier=self.tier_filter).order_by('category', 'name')
+
+class AdvancedAgentListView(BaseAgentListView):
+    """Displays Advanced Tier Agents."""
+    template_name = 'agentify/agent_list_advanced.html' # Use a specific template
+    tier_filter = Agent.TIER_ADVANCED
+
+    def get_queryset(self):
+         # Add logic here later to check if user has Advanced access if needed
+        return Agent.objects.filter(is_public=True, tier=self.tier_filter).order_by('category', 'name')
+
 # --- Existing Views ---
 
 class AgentListView(ListView):
     """
-    Displays a list of publicly available agents.
-    Accessed via the /agents/ URL.
-    Renders the template 'agentify/agent_list.html'.
+    Displays a list of publicly available agents, categorized and filterable by tier.
     """
-    model = Agent # Specifies the model to fetch data from (even if template overrides display)
-    template_name = 'agentify/agent_list.html' # Points to the template with the hardcoded cards
-    context_object_name = 'agents' # Provides the fetched agents (currently unused by template)
-    paginate_by = 12 # Pagination logic still applies if uncommented in template
+    model = Agent
+    template_name = 'agentify/agent_list.html'
+    paginate_by = 24 # Or your preferred number
 
     def get_queryset(self):
-        # This still runs, fetching agents from DB, but template ignores the result for now
-        return Agent.objects.filter(is_public=True).order_by('name')
+        # Start with public agents
+        queryset = Agent.objects.filter(is_public=True)
+
+        # Determine selected tier, defaulting to basic
+        # Get tier from URL parameter, use Agent.TIER_BASIC if not present
+        self.selected_tier = self.request.GET.get('tier', Agent.TIER_BASIC)
+
+        # Validate the selected tier, fallback to basic if invalid
+        valid_tiers = [Agent.TIER_BASIC, Agent.TIER_PRO, Agent.TIER_ADVANCED]
+        if self.selected_tier not in valid_tiers:
+            self.selected_tier = Agent.TIER_BASIC # Default to basic for safety
+
+        # Filter the queryset based on the validated selected tier
+        queryset = queryset.filter(tier=self.selected_tier)
+
+        return queryset.order_by('category', 'name') # Order for grouping
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+
+        # Get the already filtered queryset (handled by ListView + get_queryset)
+        # ListView puts the final list in 'object_list'
+        agents = context['object_list']
+
+        # Group agents by category
+        categorized_agents = defaultdict(list)
+        for agent in agents:
+            categorized_agents[agent.get_category_display()].append(agent)
+
+        # Sort categories alphabetically for consistent display order
+        context['categorized_agents'] = dict(sorted(categorized_agents.items()))
+
+        # Add the selected tier and tier constants to the context
+        # self.selected_tier is set in get_queryset
+        context['selected_tier'] = self.selected_tier
+        context['TIER_BASIC'] = Agent.TIER_BASIC
+        context['TIER_PRO'] = Agent.TIER_PRO
+        context['TIER_ADVANCED'] = Agent.TIER_ADVANCED
+
+        # Note: 'page_obj' and 'is_paginated' are automatically added by ListView
+
+        return context
 
 class AgentDetailView(DetailView):
-    """Displays the details of a single agent."""
     model = Agent
     template_name = 'agentify/agent_detail.html'
     context_object_name = 'agent'
-    slug_field = 'slug'
+    slug_field = 'slug'; 
     slug_url_kwarg = 'slug'
-
-    def get_queryset(self):
+    def get_queryset(self): 
         return Agent.objects.filter(is_public=True)
-
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs): 
         context = super().get_context_data(**kwargs)
         agent = self.get_object()
-        if self.request.user.is_authenticated:
-            context['in_workspace'] = self.request.user.workspace_agents.filter(pk=agent.pk).exists()
-        else:
-            context['in_workspace'] = False
+        context['in_workspace'] = self.request.user.is_authenticated and self.request.user.workspace_agents.filter(pk=agent.pk).exists()
         return context
+@login_required 
+@require_POST
+def add_to_workspace(request, agent_slug): 
+    agent = get_object_or_404(Agent, slug=agent_slug, is_public=True)
+    request.user.workspace_agents.add(agent)
+    messages.success(request, f"'{agent.name}' added.")
+    return redirect('agentify:agent_detail', slug=agent_slug)
+
 
 @login_required
 @require_POST
@@ -932,18 +1025,18 @@ Translation:"""
                     messages.error(request, f"AI Error: {e}")
                     context['translated_text'] = "Error during translation."
             else:
-                 messages.warning(request, "AI service not configured. Showing placeholder.")
-                 context['translated_text'] = "[AI Service Not Configured - Placeholder Translation]"
+                messages.warning(request, "AI service not configured. Showing placeholder.")
+                context['translated_text'] = "[AI Service Not Configured - Placeholder Translation]"
         elif source_lang_code == target_lang_code:
-             messages.error(request, "Source and target languages cannot be the same.")
-             context['translated_text'] = ""
+            messages.error(request, "Source and target languages cannot be the same.")
+            context['translated_text'] = ""
         else:
             messages.error(request, "Please enter text to translate.")
             context['translated_text'] = ""
     return render(request, 'agentify/tools/language_translator.html', context)
 
 # Tool 18: Grammar & Spell Checker
-# @login_required
+@login_required
 def grammar_checker_view(request):
     """Handles the Grammar & Spell Checker tool page, using Gemini AI."""
     context = {'page_title': 'Grammar & Spell Checker', 'checked_text': None, 'corrections': None}
@@ -998,7 +1091,7 @@ Changes Made:
     return render(request, 'agentify/tools/grammar_checker.html', context)
 
 # Tool 19: Unit Converter
-# @login_required
+@login_required
 def unit_converter_view(request):
     """
     Handles the Unit Converter tool page.
@@ -1047,16 +1140,16 @@ def unit_converter_view(request):
                     context['converted_value'] = f"{result_value:.4g} {to_unit_name}" # Format result
                     messages.success(request, "Conversion successful!")
                 else:
-                     messages.error(request, f"Conversion from '{from_unit}' to '{to_unit}' not supported yet.")
-                     context['converted_value'] = ""
-                 # --- End Placeholder Logic ---
+                    messages.error(request, f"Conversion from '{from_unit}' to '{to_unit}' not supported yet.")
+                    context['converted_value'] = ""
+                # --- End Placeholder Logic ---
 
             elif from_unit == to_unit:
-                 messages.error(request, "'From' and 'To' units cannot be the same.")
-                 context['converted_value'] = ""
+                messages.error(request, "'From' and 'To' units cannot be the same.")
+                context['converted_value'] = ""
             else:
-                 messages.error(request, "Please select both 'From' and 'To' units.")
-                 context['converted_value'] = ""
+                messages.error(request, "Please select both 'From' and 'To' units.")
+                context['converted_value'] = ""
         except (ValueError, TypeError):
             messages.error(request, "Please enter a valid number to convert.")
             context['converted_value'] = ""
@@ -1064,7 +1157,7 @@ def unit_converter_view(request):
     return render(request, 'agentify/tools/unit_converter.html', context)
 
 # Tool 20: Simple Q&A Bot (Already has Gemini Integration)
-# @login_required
+@login_required
 def simple_qa_bot_view(request):
     """Handles the Simple Q&A Bot tool page, using Gemini AI."""
     context = {'page_title': 'Simple Q&A Bot', 'answer': None}; agent_slug = 'simple-qa-bot'
@@ -1080,3 +1173,662 @@ def simple_qa_bot_view(request):
             else: messages.warning(request, "AI service not configured."); context['answer'] = "[Placeholder Answer]"
         else: messages.error(request, "Provide context and question."); context['answer'] = ""
     return render(request, 'agentify/tools/simple_qa_bot.html', context)
+
+
+# E:\Projects\AI Agents\ai_agents\apps\agentify\views.py
+# ... (Keep all existing imports and views above this line) ...
+
+# --- ADD THE FOLLOWING 10 NEW ADVANCED TOOL VIEWS ---
+
+# Tool: Synapse Summarize: Article Summarizer Bot
+@login_required
+def article_summarizer_view(request):
+    context = {'page_title': 'Article Summarizer', 'generated_summary': None}
+    agent_slug = 'article-summarizer' # Ensure this slug matches your Agent model entry
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        article_text = request.POST.get('article_text', '').strip()
+        summary_length = request.POST.get('summary_length', 'medium') # e.g., short, medium, long
+        context['submitted_text'] = article_text
+        context['selected_length'] = summary_length
+
+        if article_text:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    length_prompt = "a concise" if summary_length == 'short' else "a detailed" if summary_length == 'long' else "a medium-length"
+                    prompt = f"""Generate {length_prompt} summary of the following article text. Focus on the main points and key takeaways. Format using Markdown if appropriate.
+
+Article Text:
+---
+{article_text}
+---
+
+Summary:"""
+                    response = model.generate_content(prompt)
+                    summary_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists'])
+                    context['generated_summary'] = summary_html
+                    messages.success(request, "Article summary generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['generated_summary'] = "<p>Error generating summary.</p>"
+            else:
+                messages.warning(request, "AI service not configured."); context['generated_summary'] = "<p>[Placeholder Summary]</p>"
+        else:
+            messages.error(request, "Please paste the article text."); context['generated_summary'] = ""
+    return render(request, 'agentify/tools_advanced/article_summarizer.html', context)
+
+
+# Tool: Synapse Meeting Notes: Meeting Summary Bot (Adapting existing logic)
+@login_required
+def meeting_notes_bot_view(request): # Renamed view slightly
+    """Handles the Meeting Summary Bot tool page, using Gemini AI."""
+    context = {'page_title': 'Meeting Summary Bot', 'generated_summary': None}
+    # Use the specific slug for this agent if different from the basic one
+    agent_slug = 'meeting-notes-bot' # Ensure this slug matches your Agent model entry
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        meeting_text = request.POST.get('meeting_text', '').strip()
+        context['submitted_text'] = meeting_text
+        if meeting_text:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Summarize the following meeting transcript or notes. Identify the main topic, key discussion points, decisions made, and any action items. Format the output clearly using Markdown for headings (like ## Key Points) and bullet points.
+
+Meeting Text:
+---
+{meeting_text}
+---
+
+Summary:"""
+                    response = model.generate_content(prompt)
+                    summary_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists'])
+                    context['generated_summary'] = summary_html
+                    messages.success(request, "Meeting summary generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['generated_summary'] = "<p>Error generating summary.</p>"
+            else:
+                messages.warning(request, "AI service not configured."); context['generated_summary'] = "<p>[Placeholder Summary]</p>"
+        else:
+            messages.error(request, "Please paste meeting text."); context['generated_summary'] = ""
+    # Point to a potentially specific template or reuse the generic one
+    return render(request, 'agentify/tools_advanced/meeting_summarizer.html', context) # Reusing template for now
+
+
+# Tool: Synapse Document Digest: Document Summary Bot
+@login_required
+def document_digest_view(request):
+    """Handles the Document Summary Bot tool page, using Gemini AI."""
+    context = {'page_title': 'Document Digest Bot', 'generated_summary': None}
+    agent_slug = 'document-digest' # Ensure this slug matches your Agent model entry
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        document_text = request.POST.get('document_text', '').strip()
+        summary_type = request.POST.get('summary_type', 'key_points') # e.g., key_points, abstract
+        context['submitted_text'] = document_text
+        context['selected_type'] = summary_type
+
+        if document_text:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    type_prompt = "an abstract for" if summary_type == 'abstract' else "the key points and main arguments of"
+                    prompt = f"""Generate {type_prompt} the following document text. Format the output clearly using Markdown if appropriate.
+
+Document Text:
+---
+{document_text}
+---
+
+Summary:"""
+                    response = model.generate_content(prompt)
+                    summary_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists'])
+                    context['generated_summary'] = summary_html
+                    messages.success(request, "Document summary generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['generated_summary'] = "<p>Error generating summary.</p>"
+            else:
+                messages.warning(request, "AI service not configured."); context['generated_summary'] = "<p>[Placeholder Summary]</p>"
+        else:
+            messages.error(request, "Please paste the document text."); context['generated_summary'] = ""
+    return render(request, 'agentify/tools_advanced/document_digest.html', context)
+
+
+# Tool: Synapse Content Forge: Ad Copy Generator (Specific focus)
+@login_required
+def ad_copy_generator_view(request):
+    """Handles the Ad Copy Generator tool page, using Gemini AI."""
+    context = {'page_title': 'Ad Copy Generator', 'generated_copy': None}
+    agent_slug = 'ad-copy-generator' # Use a specific slug
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        product_service = request.POST.get('product_service', '').strip()
+        target_audience = request.POST.get('target_audience', '').strip()
+        key_message = request.POST.get('key_message', '').strip()
+        context.update({'submitted_product': product_service, 'submitted_audience': target_audience, 'submitted_message': key_message})
+
+        if product_service and key_message:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Generate 3 variations of short, compelling ad copy for the following:
+Product/Service: {product_service}
+Target Audience: {target_audience if target_audience else 'General'}
+Key Message/Benefit: {key_message}
+
+Format as a list, separated by blank lines. Include a headline and body for each variation if appropriate.
+
+Ad Copy Variations:"""
+                    response = model.generate_content(prompt)
+                    copy_list = [copy.strip() for copy in response.text.strip().split('\n\n') if copy.strip()]
+                    context['generated_copy'] = copy_list[:3]
+                    messages.success(request, "Ad copy generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['generated_copy'] = ["Error generating ad copy."]
+            else:
+                messages.warning(request, "AI service not configured."); context['generated_copy'] = ["[Placeholder Ad Copy 1]"]
+        else:
+            messages.error(request, "Please provide Product/Service and Key Message."); context['generated_copy'] = []
+    return render(request, 'agentify/tools_advanced/ad_copy_generator.html', context)
+
+
+# Tool: Synapse Email Assist: Email Reply Bot
+@login_required
+def email_reply_bot_view(request):
+    """Handles the Email Reply Bot tool page, using Gemini AI."""
+    context = {'page_title': 'Email Reply Assistant', 'generated_reply': None}
+    agent_slug = 'email-reply-bot' # Ensure this slug matches
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        original_email = request.POST.get('original_email', '').strip()
+        reply_goal = request.POST.get('reply_goal', '').strip() # e.g., "Politely decline", "Accept meeting", "Ask for clarification"
+        context.update({'submitted_email': original_email, 'submitted_goal': reply_goal})
+
+        if original_email and reply_goal:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Draft a professional email reply based on the original email and the desired goal. Keep it concise and appropriate.
+
+Original Email:
+---
+{original_email}
+---
+
+Goal for Reply: {reply_goal}
+
+Draft Reply:"""
+                    response = model.generate_content(prompt)
+                    context['generated_reply'] = response.text.strip()
+                    messages.success(request, "Email reply draft generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['generated_reply'] = "Error generating reply draft."
+            else:
+                messages.warning(request, "AI service not configured."); context['generated_reply'] = "[Placeholder Email Reply]"
+        else:
+            messages.error(request, "Please provide the original email and the goal for your reply."); context['generated_reply'] = ""
+    return render(request, 'agentify/tools_advanced/email_reply_bot.html', context)
+
+
+# Tool: Synapse Chat Pro: Draft Chat Reply Bot (Simplified)
+@login_required
+def chat_reply_draft_view(request):
+    """Handles the Draft Chat Reply tool page, using Gemini AI."""
+    context = {'page_title': 'Draft Chat Reply Assistant', 'generated_reply': None}
+    agent_slug = 'draft-chat-reply-bot' # Use specific slug
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        last_message = request.POST.get('last_message', '').strip()
+        scenario = request.POST.get('scenario', '').strip() # e.g., "Customer asks for refund", "User reports bug"
+        context.update({'submitted_message': last_message, 'submitted_scenario': scenario})
+
+        if last_message and scenario:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Draft a brief, helpful, and empathetic chat reply based on the last message received and the scenario description.
+
+Scenario: {scenario}
+Last Message Received: {last_message}
+
+Draft Reply:"""
+                    response = model.generate_content(prompt)
+                    context['generated_reply'] = response.text.strip()
+                    messages.success(request, "Chat reply draft generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['generated_reply'] = "Error generating reply draft."
+            else:
+                messages.warning(request, "AI service not configured."); context['generated_reply'] = "[Placeholder Chat Reply]"
+        else:
+            messages.error(request, "Please provide the last message and scenario."); context['generated_reply'] = ""
+    return render(request, 'agentify/tools_advanced/chat_reply_draft.html', context)
+
+
+# Tool: Synapse Social Respond: Social Media Reply Bot
+@login_required
+def social_media_reply_bot_view(request):
+    """Handles the Social Media Reply Bot tool page, using Gemini AI."""
+    context = {'page_title': 'Social Media Reply Assistant', 'generated_reply': None}
+    agent_slug = 'social-media-reply-bot' # Ensure this slug matches
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        original_post = request.POST.get('original_post', '').strip()
+        reply_tone = request.POST.get('reply_tone', 'professional') # e.g., professional, friendly, witty
+        context.update({'submitted_post': original_post, 'selected_tone': reply_tone})
+
+        if original_post:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Draft a short social media reply (suitable for platforms like Twitter or Facebook comments) to the following post/comment. Aim for a {reply_tone} tone.
+
+Original Post/Comment:
+{original_post}
+
+Draft Reply:"""
+                    response = model.generate_content(prompt)
+                    context['generated_reply'] = response.text.strip()
+                    messages.success(request, "Social media reply draft generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['generated_reply'] = "Error generating reply draft."
+            else:
+                messages.warning(request, "AI service not configured."); context['generated_reply'] = "[Placeholder Social Reply]"
+        else:
+            messages.error(request, "Please provide the original post/comment."); context['generated_reply'] = ""
+    return render(request, 'agentify/tools_advanced/social_media_reply_bot.html', context)
+
+
+# Tool: Synapse Tech Terms: Technical Term Explainer Bot
+@login_required
+def tech_term_explainer_view(request):
+    """Handles the Technical Term Explainer tool page, using Gemini AI."""
+    context = {'page_title': 'Technical Term Explainer', 'explanation': None}
+    agent_slug = 'technical-term-explainer' # Ensure this slug matches
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        term = request.POST.get('term', '').strip()
+        audience = request.POST.get('audience', 'beginner') # e.g., beginner, intermediate, expert
+        context.update({'submitted_term': term, 'selected_audience': audience})
+
+        if term:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    audience_prompt = f"Explain it simply, assuming a {audience} level of understanding."
+                    prompt = f"""Explain the technical term "{term}". {audience_prompt} Keep the explanation clear and concise. Use analogies if helpful.
+
+Explanation:"""
+                    response = model.generate_content(prompt)
+                    explanation_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists'])
+                    context['explanation'] = explanation_html
+                    messages.success(request, "Explanation generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['explanation'] = "<p>Error generating explanation.</p>"
+            else:
+                messages.warning(request, "AI service not configured."); context['explanation'] = "<p>[Placeholder Explanation]</p>"
+        else:
+            messages.error(request, "Please enter a technical term."); context['explanation'] = ""
+    return render(request, 'agentify/tools_advanced/tech_term_explainer.html', context)
+
+
+# Tool: Synapse Code Explain: Code Explanation Bot (Adapting existing logic)
+@login_required
+def code_explanation_bot_view(request): # Renamed view slightly
+    """Handles the Code Explanation Bot tool page, using Gemini AI."""
+    context = {'page_title': 'Code Explanation Bot', 'explanation': None}
+    agent_slug = 'code-explanation-bot' # Ensure this slug matches
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        code_snippet = request.POST.get('code_snippet', '').strip()
+        language = request.POST.get('language', 'python')
+        context.update({'submitted_code': code_snippet, 'selected_language': language})
+        if code_snippet:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Explain the following {language} code snippet in simple terms. Describe its purpose, inputs, outputs, and main logic steps. Format the explanation clearly using Markdown.
+
+                    Code Snippet:
+                    ```{language}
+                    {code_snippet}
+                    Explanation:"""
+                    response = model.generate_content(prompt)
+                    explanation_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists', 'fenced_code'])
+                    context['explanation'] = explanation_html
+                    messages.success(request, "Code explanation generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['explanation'] = "&lt;p>Error generating explanation.&lt;/p>"
+            else:
+                messages.warning(request, "AI service not configured."); context['explanation'] = "&lt;p>[Placeholder Explanation]&lt;/p>"
+        else:
+            messages.error(request, "Please enter code."); context['explanation'] = ""
+            # Point to a potentially specific template or reuse the generic one
+    return render(request, 'agentify/tools_advanced/code_explainer.html', context) # Reusing template for now
+
+
+@login_required
+def concept_explainer_view(request):
+    """Handles the Concept Explainer tool page, using Gemini AI."""
+    context = {'page_title': 'Concept Explainer', 'explanation': None}
+    agent_slug = 'concept-explainer' # Ensure this slug matches
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        concept = request.POST.get('concept', '').strip()
+        audience = request.POST.get('audience', 'beginner') # e.g., beginner, intermediate, expert
+        context.update({'submitted_concept': concept, 'selected_audience': audience})
+
+        if concept:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    audience_prompt = f"Explain it simply, assuming a {audience} level of understanding."
+                    prompt = f"""Explain the concept: "{concept}". {audience_prompt} Keep the explanation clear and concise. Use analogies or simple examples if helpful. Format using Markdown.
+                    Explanation:"""
+                    response = model.generate_content(prompt)
+                    explanation_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists'])
+                    context['explanation'] = explanation_html
+                    messages.success(request, "Explanation generated (Gemini AI).")
+                except Exception as e:
+                    messages.error(request, f"AI Error: {e}")
+                    context['explanation'] = "&lt;p>Error generating explanation.&lt;/p>"
+            else:
+                messages.warning(request, "AI service not configured."); context['explanation'] = "&lt;p>[Placeholder Explanation]&lt;/p>"
+        else:
+            messages.error(request, "Please enter a concept to explain."); context['explanation'] = ""
+    return render(request, 'agentify/tools_advanced/concept_explainer.html', context)
+
+@login_required
+def user_management_bot_view(request):
+    context = {'page_title': 'User Management Flow Assistant', 'generated_flow': None}
+    agent_slug = 'user-management-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        flow_type = request.POST.get('flow_type', 'registration') # e.g., registration, password_reset, profile_update
+        context['selected_flow'] = flow_type
+        if flow_type:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Outline the key steps and considerations for implementing a secure user {flow_type} flow in a typical web application. Include aspects like data validation, security measures (e.g., hashing, email verification), and user experience best practices. Format as Markdown list or steps.
+
+User Flow Steps for {flow_type.replace('_',' ').title()}:"""
+                    response = model.generate_content(prompt)
+                    flow_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists'])
+                    context['generated_flow'] = flow_html
+                    messages.success(request, f"{flow_type.replace('_',' ').title()} flow outline generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['generated_flow'] = "<p>Error generating flow.</p>"
+            else: messages.warning(request, "AI service not configured."); context['generated_flow'] = "<p>[Placeholder Flow Steps]</p>"
+        else: messages.error(request, "Please select a flow type."); context['generated_flow'] = ""
+    return render(request, 'agentify/tools_advanced/user_management_bot.html', context)
+
+
+# Tool 12: Synapse Data Safe: Data Backup Bot
+# @login_required
+def data_backup_bot_view(request):
+    context = {'page_title': 'Data Backup Strategy Assistant', 'backup_plan': None}
+    agent_slug = 'data-backup-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        db_type = request.POST.get('db_type', 'PostgreSQL')
+        frequency = request.POST.get('frequency', 'daily')
+        storage = request.POST.get('storage', 'Cloud Storage (S3/GCS)')
+        context.update({'submitted_db': db_type, 'submitted_freq': frequency, 'submitted_storage': storage})
+        if db_type and frequency and storage:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Outline a basic strategy or provide example commands/scripts for setting up automated {frequency} backups for a {db_type} database, storing the backups in {storage}. Include key considerations like retention policy and testing restores.
+
+Backup Strategy/Examples for {db_type}:"""
+                    response = model.generate_content(prompt)
+                    plan_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists', 'fenced_code'])
+                    context['backup_plan'] = plan_html
+                    messages.success(request, "Backup strategy outline generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['backup_plan'] = "<p>Error generating plan.</p>"
+            else: messages.warning(request, "AI service not configured."); context['backup_plan'] = "<p>[Placeholder Backup Plan]</p>"
+        else: messages.error(request, "Please provide all details."); context['backup_plan'] = ""
+    return render(request, 'agentify/tools_advanced/data_backup_bot.html', context)
+
+
+# Tool 13: Synapse Site Speed: Performance Monitoring Bot
+# @login_required
+def performance_monitoring_bot_view(request):
+    context = {'page_title': 'Performance Monitoring Assistant', 'monitoring_tips': None}
+    agent_slug = 'performance-monitoring-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        site_type = request.POST.get('site_type', 'Django Web App') # e.g., Django, React SPA, Static Site
+        metric = request.POST.get('metric', 'Load Time') # e.g., Load Time, DB Queries, Server Response
+        context.update({'submitted_type': site_type, 'submitted_metric': metric})
+        if site_type and metric:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Provide key strategies and suggest tools for monitoring the performance metric '{metric}' for a {site_type}. Focus on actionable advice. Format as a list.
+
+Monitoring Strategies for '{metric}' on {site_type}:"""
+                    response = model.generate_content(prompt)
+                    context['monitoring_tips'] = parse_ai_list_response(response.text)
+                    messages.success(request, "Monitoring tips generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['monitoring_tips'] = ["Error generating tips."]
+            else: messages.warning(request, "AI service not configured."); context['monitoring_tips'] = ["[Placeholder Monitoring Tip 1]"]
+        else: messages.error(request, "Please provide all details."); context['monitoring_tips'] = []
+    return render(request, 'agentify/tools_advanced/performance_monitoring_bot.html', context)
+
+
+# Tool 14: Synapse Email Alerts: Email Notification Bot
+# @login_required
+def email_notification_bot_view(request):
+    context = {'page_title': 'Email Notification Setup Assistant', 'setup_guide': None}
+    agent_slug = 'email-notification-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        trigger_event = request.POST.get('trigger_event', 'New User Signup')
+        platform = request.POST.get('platform', 'Django')
+        context.update({'submitted_event': trigger_event, 'submitted_platform': platform})
+        if trigger_event and platform:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Provide example code snippets or outline the steps required to send an email notification in a {platform} application when the event '{trigger_event}' occurs. Include considerations for email templates and using an email sending service (like SendGrid, Mailgun, or Django's SMTP backend). Format using Markdown.
+
+Email Notification Setup for '{trigger_event}' in {platform}:"""
+                    response = model.generate_content(prompt)
+                    guide_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists', 'fenced_code'])
+                    context['setup_guide'] = guide_html
+                    messages.success(request, "Email notification setup guide generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['setup_guide'] = "<p>Error generating guide.</p>"
+            else: messages.warning(request, "AI service not configured."); context['setup_guide'] = "<p>[Placeholder Setup Guide]</p>"
+        else: messages.error(request, "Please provide all details."); context['setup_guide'] = ""
+    return render(request, 'agentify/tools_advanced/email_notification_bot.html', context)
+
+
+# Tool 15: Synapse Form Pro: Form Submission Bot
+# @login_required
+def form_submission_bot_view(request):
+    context = {'page_title': 'Form Submission Handling Assistant', 'handling_code': None}
+    agent_slug = 'form-submission-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        form_fields = request.POST.get('form_fields', 'name, email, message')
+        backend_lang = request.POST.get('backend_lang', 'Django')
+        action = request.POST.get('action', 'Save to DB and Send Email')
+        context.update({'submitted_fields': form_fields, 'submitted_lang': backend_lang, 'submitted_action': action})
+        if form_fields and backend_lang and action:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Provide example backend code (in {backend_lang}) to handle a web form submission with the fields '{form_fields}'. The code should perform the action: '{action}'. Include basic validation concepts. Format using Markdown code blocks.
+
+{backend_lang} Form Handling Code for '{action}':"""
+                    response = model.generate_content(prompt)
+                    code_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists', 'fenced_code'])
+                    context['handling_code'] = code_html
+                    messages.success(request, "Form handling code example generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['handling_code'] = "<p>Error generating code.</p>"
+            else: messages.warning(request, "AI service not configured."); context['handling_code'] = "<p>[Placeholder Code]</p>"
+        else: messages.error(request, "Please provide all details."); context['handling_code'] = ""
+    return render(request, 'agentify/tools_advanced/form_submission_bot.html', context)
+
+
+# Tool 16: Synapse Search Boost: Search Optimization Bot
+# @login_required
+def search_optimization_bot_view(request):
+    context = {'page_title': 'Search Optimization Assistant', 'seo_tips': None}
+    agent_slug = 'search-optimization-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        content_type = request.POST.get('content_type', 'Blog Post') # e.g., Blog Post, Product Page, Landing Page
+        keywords = request.POST.get('keywords', '').strip()
+        context.update({'submitted_type': content_type, 'submitted_keywords': keywords})
+        if content_type and keywords:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Provide actionable on-page SEO (Search Engine Optimization) tips for a '{content_type}' targeting the keywords '{keywords}'. Include suggestions for title tags, headings, content, meta descriptions, and internal linking. Format as a checklist or bulleted list.
+
+SEO Tips for '{content_type}' targeting '{keywords}':"""
+                    response = model.generate_content(prompt)
+                    tips_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists'])
+                    context['seo_tips'] = tips_html
+                    messages.success(request, "SEO tips generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['seo_tips'] = "<p>Error generating tips.</p>"
+            else: messages.warning(request, "AI service not configured."); context['seo_tips'] = "<p>[Placeholder SEO Tips]</p>"
+        else: messages.error(request, "Please provide content type and keywords."); context['seo_tips'] = ""
+    return render(request, 'agentify/tools_advanced/search_optimization_bot.html', context)
+
+
+# Tool 17: Synapse Data Entry Pro: Data Entry Bot (Suggests Automation)
+# @login_required
+def data_entry_bot_view(request):
+    context = {'page_title': 'Data Entry Automation Assistant', 'automation_ideas': None}
+    agent_slug = 'data-entry-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        data_source = request.POST.get('data_source', 'Invoices') # e.g., Invoices, Spreadsheets, Web Forms
+        data_destination = request.POST.get('data_destination', 'Database') # e.g., Database, CRM, Spreadsheet
+        context.update({'submitted_source': data_source, 'submitted_dest': data_destination})
+        if data_source and data_destination:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Suggest potential methods or tools to automate data entry from '{data_source}' into '{data_destination}'. Consider options like OCR, web scraping (if applicable and ethical), APIs, or RPA (Robotic Process Automation) tools. Briefly describe the pros and cons of each suggested method.
+
+Automation Ideas for Data Entry ({data_source} to {data_destination}):"""
+                    response = model.generate_content(prompt)
+                    ideas_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists'])
+                    context['automation_ideas'] = ideas_html
+                    messages.success(request, "Data entry automation ideas generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['automation_ideas'] = "<p>Error generating ideas.</p>"
+            else: messages.warning(request, "AI service not configured."); context['automation_ideas'] = "<p>[Placeholder Automation Ideas]</p>"
+        else: messages.error(request, "Please provide data source and destination."); context['automation_ideas'] = ""
+    return render(request, 'agentify/tools_advanced/data_entry_bot.html', context)
+
+
+# Tool 18: Synapse Schedule Pro: Scheduling Bot (Suggests Tools/Logic)
+# @login_required
+def scheduling_bot_view(request):
+    context = {'page_title': 'Scheduling Assistant', 'scheduling_suggestions': None}
+    agent_slug = 'scheduling-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        schedule_type = request.POST.get('schedule_type', 'Meeting with multiple attendees') # e.g., Meeting, Appointment Booking, Task Scheduling
+        constraints = request.POST.get('constraints', '').strip() # e.g., Check calendars, Find common availability, Time zones
+        context.update({'submitted_type': schedule_type, 'submitted_constraints': constraints})
+        if schedule_type:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Suggest tools or logic for automating the scheduling task: '{schedule_type}'. Consider the constraints: '{constraints if constraints else 'None specified'}'. Recommend specific tools (like Calendly, Google Calendar API) or outline the programming logic needed.
+
+Scheduling Suggestions for '{schedule_type}':"""
+                    response = model.generate_content(prompt)
+                    suggestions_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists', 'fenced_code'])
+                    context['scheduling_suggestions'] = suggestions_html
+                    messages.success(request, "Scheduling suggestions generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['scheduling_suggestions'] = "<p>Error generating suggestions.</p>"
+            else: messages.warning(request, "AI service not configured."); context['scheduling_suggestions'] = "<p>[Placeholder Scheduling Suggestions]</p>"
+        else: messages.error(request, "Please specify the type of scheduling needed."); context['scheduling_suggestions'] = ""
+    return render(request, 'agentify/tools/scheduling_bot.html', context)
+
+
+# Tool 19: Synapse Reminder Pro: Reminder Bot (Suggests Implementation)
+# @login_required
+def reminder_bot_view(request):
+    context = {'page_title': 'Reminder Setup Assistant', 'reminder_setup': None}
+    agent_slug = 'reminder-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        reminder_type = request.POST.get('reminder_type', 'Appointment') # e.g., Appointment, Task Deadline, Bill Payment
+        channel = request.POST.get('channel', 'Email') # e.g., Email, SMS, App Notification
+        context.update({'submitted_type': reminder_type, 'submitted_channel': channel})
+        if reminder_type and channel:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Outline the steps or provide example logic/tools for setting up automated '{reminder_type}' reminders to be sent via '{channel}'. Consider aspects like scheduling, user preferences, and message content.
+
+Setup for '{reminder_type}' Reminders via {channel}:"""
+                    response = model.generate_content(prompt)
+                    setup_html = markdown.markdown(response.text, extensions=['extra', 'nl2br', 'sane_lists', 'fenced_code'])
+                    context['reminder_setup'] = setup_html
+                    messages.success(request, "Reminder setup suggestions generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['reminder_setup'] = "<p>Error generating suggestions.</p>"
+            else: messages.warning(request, "AI service not configured."); context['reminder_setup'] = "<p>[Placeholder Reminder Setup]</p>"
+        else: messages.error(request, "Please provide all details."); context['reminder_setup'] = ""
+    return render(request, 'agentify/tools_advanced/reminder_bot.html', context)
+
+
+# Tool 20: Synapse Personalize Pro: Personalization Bot (Suggests Strategies)
+# @login_required
+def personalization_bot_view(request):
+    context = {'page_title': 'Personalization Strategy Assistant', 'personalization_ideas': None}
+    agent_slug = 'personalization-bot' # Ensure slug matches Agent model
+    try: context['agent'] = Agent.objects.get(slug=agent_slug)
+    except Agent.DoesNotExist: context['agent'] = None; messages.warning(request, f"Agent data for '{agent_slug}' not found.")
+
+    if request.method == 'POST':
+        context_type = request.POST.get('context_type', 'Website Content') # e.g., Website Content, Email Marketing, Product Recommendations
+        user_data = request.POST.get('user_data', 'Purchase History, Browsing Behavior') # e.g., Demographics, Purchase History
+        context.update({'submitted_type': context_type, 'submitted_data': user_data})
+        if context_type and user_data:
+            if GEMINI_CONFIGURED and model:
+                try:
+                    prompt = f"""Suggest personalization strategies for '{context_type}' based on available user data like '{user_data}'. Provide 3-5 actionable ideas.
+
+Personalization Strategies for '{context_type}':"""
+                    response = model.generate_content(prompt)
+                    context['personalization_ideas'] = parse_ai_list_response(response.text)
+                    messages.success(request, "Personalization ideas generated (Gemini AI).")
+                except Exception as e: messages.error(request, f"AI Error: {e}"); context['personalization_ideas'] = ["Error generating ideas."]
+            else: messages.warning(request, "AI service not configured."); context['personalization_ideas'] = ["[Placeholder Personalization Idea 1]"]
+        else: messages.error(request, "Please provide context type and available user data points."); context['personalization_ideas'] = []
+    return render(request, 'agentify/tools_advanced/personalization_bot.html', context)

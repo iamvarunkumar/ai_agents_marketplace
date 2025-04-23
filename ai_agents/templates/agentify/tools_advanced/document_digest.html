@@ -1,0 +1,55 @@
+{# templates/agentify/tools/document_digest.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"AI Tool" }}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+                {# Tool Header #}
+                <div class="row align-items-center mb-4 pb-4 border-bottom border-secondary">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">{{ page_title|default:"AI Tool" }}</h1>
+                        {% if agent %}<p class="text-muted-color">{{ agent.short_description|default:"Summarize documents into key points or abstracts." }}</p>{% else %}<p class="text-muted-color">Summarize documents into key points or abstracts.</p>{% endif %}
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center tool-illustration-container">
+                         <img src="{% static 'images/document_digest_icon.png' %}" alt="{{ page_title }} Illustration" class="img-fluid rounded" style="max-height: 100px;"> {# <-- Update image name #}
+                    </div>
+                </div>
+                {# Input Form #}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="docTextInput" class="form-label fw-bold">Document Text:</label>
+                        <textarea class="form-control" id="docTextInput" name="document_text" rows="10" placeholder="Paste the document text here..." required>{{ submitted_text|default:'' }}</textarea>
+                    </div>
+                     <div class="mb-3">
+                        <label for="summaryTypeSelect" class="form-label fw-bold">Summary Type:</label>
+                        <select class="form-select" id="summaryTypeSelect" name="summary_type">
+                            <option value="key_points" {% if not selected_type or selected_type == 'key_points' %}selected{% endif %}>Key Points</option>
+                            <option value="abstract" {% if selected_type == 'abstract' %}selected{% endif %}>Abstract</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg mt-2"><i class="bi bi-file-earmark-zip-fill me-2"></i>Generate Digest</button>
+                    </div>
+                </form>
+                {# Results Area #}
+                {% if generated_summary is not None %}
+                    <hr class="border-secondary my-4">
+                    <div class="results-area mt-4">
+                        <h2 class="h4 fw-bold mb-3">Generated Summary:</h2>
+                        <div class="glass-panel nested-panel p-4">
+                           {# Use safe filter because generated_summary contains HTML from Markdown #}
+                           {{ generated_summary|default:"<p>Could not generate summary.</p>"|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_head %}<style>.tool-illustration-container img { opacity: 0.8; } .nested-panel { background-color: rgba(0,0,0, 0.15) !important; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-color: rgba(255, 255, 255, 0.1) !important; color: var(--text-color) !important; border-radius: var(--border-radius); } .nested-panel p:last-child { margin-bottom: 0; }</style>{% endblock extra_head %}
