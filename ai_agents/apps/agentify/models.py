@@ -17,7 +17,7 @@ class Agent(models.Model):
     slug = models.SlugField(
         max_length=120,
         unique=True,
-        # UPDATED: Allow blank in forms/admin, but database still requires a value
+        # Allow blank in forms/admin, but database still requires a value
         blank=True,
         help_text="URL-friendly version of the name, auto-generated if left blank."
     )
@@ -57,7 +57,7 @@ class Agent(models.Model):
 
     def get_absolute_url(self):
         # Define how to get the URL for a single agent instance
-        # Assumes you will create an 'agent_detail' URL name later in agentify.urls
+        # Assumes you created an 'agent_detail' URL name in agentify.urls
         # Ensure the name matches: 'agentify:agent_detail'
         try:
             # Use the 'agentify' namespace defined in your root urls.py include
@@ -76,3 +76,4 @@ class Agent(models.Model):
         super().save(*args, **kwargs) # Call the "real" save() method.
 
 # Add other agent-related models here later (e.g., AgentVersion, AgentRunLog)
+

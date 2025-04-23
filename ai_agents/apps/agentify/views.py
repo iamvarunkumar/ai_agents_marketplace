@@ -3,6 +3,8 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from apps.users.serializers import UserSerializer, RegisterSerializer
+from django.views.generic import ListView, DetailView # Use Django's generic ListView
+from .models import Agent # Import the Agent model
 # SimpleJWT views for login will be handled in urls.py directly
 
 CustomUser = get_user_model()
@@ -30,12 +32,6 @@ def home_view(request):
     # context = {'some_key': 'some_value'}
     return render(request, 'home.html') # Renders templates/home.html
 
-# E:\Projects\AI Agents\ai_agents\apps\agentify\views.py
-
-from django.shortcuts import render
-from django.views.generic import ListView # Use Django's generic ListView
-from .models import Agent # Import the Agent model
-
 class AgentListView(ListView):
     """
     Displays a list of publicly available agents.
@@ -50,4 +46,24 @@ class AgentListView(ListView):
         return Agent.objects.filter(is_public=True).order_by('name')
 
 # You will add other views here later (e.g., AgentDetailView, AgentCreateView)
+# E:\Projects\AI Agents\ai_agents\apps\agentify\views.py
 
+class AgentDetailView(DetailView):
+    """
+    Displays the details of a single agent.
+    Accessed via /agents/<slug>/ URL.
+    """
+    model = Agent
+    template_name = 'agentify/agent_detail.html'
+    context_object_name = 'agent' # Name for the single agent object in the template
+    # DetailView automatically uses the 'slug' field from the URL pattern
+    # if slug_field is not specified otherwise, or pk if pk is used in URL.
+    slug_field = 'slug' # Explicitly state we are looking up by slug
+    slug_url_kwarg = 'slug' # Explicitly state the URL keyword argument is 'slug'
+
+    def get_queryset(self):
+        # Optionally, ensure only public agents can be viewed directly
+        # Or allow creators to view their non-public agents (add logic later)
+        return Agent.objects.filter(is_public=True)
+
+# You will add other views here later (e.g., AgentCreateView)

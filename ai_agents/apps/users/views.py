@@ -154,14 +154,8 @@ def logout_view(request):
     messages.info(request, "You have successfully logged out.")
     return redirect('home')
 
-@login_required # Decorator ensures only logged-in users can access this view
+@login_required
 def dashboard_view(request):
-    """
-    Renders the user's dashboard page.
-    Requires user to be logged in.
-    """
-    context = {
-        'user': request.user
-    }
-    # CORRECTED: Point to the correct template path
+    context = {'user': request.user}
+    # Is this path EXACTLY where your edited dashboard.html is?
     return render(request, 'registration/dashboard.html', context)

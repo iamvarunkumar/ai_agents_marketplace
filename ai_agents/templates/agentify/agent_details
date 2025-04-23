@@ -1,0 +1,104 @@
+{# templates/agentify/agent_detail.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ agent.name }} - Agent Details{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9"> {# Consistent width #}
+            <div class="glass-panel mt-4 mb-4 p-4 p-md-5">
+
+                {# Agent Header #}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-6 fw-bold mb-0">{{ agent.name }}</h1>
+                    {# Placeholder Button to Run/Use Agent #}
+                    <a href="#" class="btn btn-primary"><i class="bi bi-play-fill me-2"></i>Run Agent</a>
+                </div>
+
+                {# Agent Metadata #}
+                <div class="mb-4 pb-3 border-bottom border-secondary">
+                    <p class="small text-muted-color mb-1">
+                        Created by:
+                        {% if agent.creator %}
+                            {{ agent.creator.username|default:"Platform" }}
+                        {% else %}
+                            Platform
+                        {% endif %}
+                         on {{ agent.created_at|date:"M d, Y" }}
+                    </p>
+                    {# Add other metadata like version later #}
+                    {# <p class="small text-muted-color mb-1">Version: {{ agent.version|default:"1.0" }}</p> #}
+                </div>
+
+                {# Agent Description #}
+                <div class="mb-4">
+                    <h3 class="h5 fw-bold mb-3">Description</h3>
+                    <p class="text-muted-color">
+                        {{ agent.description|default:"No detailed description provided."|linebreaksbr }}
+                    </p>
+                </div>
+
+                {# Placeholder Sections for Input/Output/Usage #}
+                <div class="mb-4">
+                    <h3 class="h5 fw-bold mb-3">Input Specification</h3>
+                    <div class="glass-panel p-3 nested-panel"> {# Nested panel example #}
+                        <p class="small text-muted-color mb-0"><em>Input details will be shown here (e.g., required format, example).</em></p>
+                        {# Example using hypothetical JSON field #}
+                        {# {% if agent.input_schema %} <pre><code>{{ agent.input_schema|json_script:"input-schema" }}</code></pre> {% endif %} #}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="h5 fw-bold mb-3">Output Specification</h3>
+                     <div class="glass-panel p-3 nested-panel">
+                        <p class="small text-muted-color mb-0"><em>Output details will be shown here (e.g., format, example).</em></p>
+                         {# Example using hypothetical JSON field #}
+                         {# {% if agent.output_schema %} <pre><code>{{ agent.output_schema|json_script:"output-schema" }}</code></pre> {% endif %} #}
+                    </div>
+                </div>
+
+                 <div class="mb-4">
+                    <h3 class="h5 fw-bold mb-3">Example Usage</h3>
+                     <div class="glass-panel p-3 nested-panel">
+                        <p class="small text-muted-color mb-0"><em>Code snippets or instructions on how to use the agent will appear here.</em></p>
+                        {# <pre><code>Example code...</code></pre> #}
+                    </div>
+                </div>
+
+                {# Back Link #}
+                <div class="mt-4 text-center">
+                    <a href="{% url 'agentify:agent_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Agent List
+                    </a>
+                </div>
+
+            </div> {# End Main Panel #}
+        </div> {# End Column #}
+    </div> {# End Row #}
+</div>
+{% endblock content %}
+
+{% block extra_scripts %}
+{# Add any JavaScript specific to the agent detail page here if needed #}
+{% endblock extra_scripts %}
+
+{% block extra_head %}
+{# Add specific CSS if needed for nested panels etc. #}
+<style>
+    .nested-panel {
+        background-color: rgba(0,0,0, 0.15) !important; /* Darker nested panel */
+        backdrop-filter: blur(5px); /* Less blur */
+        -webkit-backdrop-filter: blur(5px);
+    }
+    pre { /* Basic styling for code blocks if used */
+        background-color: rgba(0,0,0, 0.3);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        white-space: pre-wrap; /* Wrap long lines */
+        word-wrap: break-word;
+    }
+</style>
+{% endblock extra_head %}

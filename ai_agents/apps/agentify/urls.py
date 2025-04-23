@@ -2,7 +2,7 @@
 
 from django.urls import path
 # Import views from *this* app when you create them
-# from . import views
+from . import views
 
 app_name = 'agentify' # Namespace for agentify-related URLs
 
@@ -12,4 +12,6 @@ urlpatterns = [
     # path('', views.agent_list_view, name='agent_list'),
     # path('create/', views.agent_create_view, name='agent_create'),
     # path('<int:pk>/', views.agent_detail_view, name='agent_detail'),
+    path('agents/', views.AgentListView.as_view(), name='agent_list'),
+    path('<slug:slug>/', views.AgentDetailView.as_view(), name='agent_detail'),
 ]

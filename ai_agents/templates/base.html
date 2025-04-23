@@ -1,5 +1,5 @@
 {# templates/base.html #}
-{% load static %}
+{% load static %} {# Load static tag library #}
 <!doctype html>
 <html lang="en">
 <head>
@@ -14,7 +14,8 @@
 
     <title>{% block title %}AI Agent Marketplace{% endblock title %}</title>
 
-    {% block extra_head %}{% endblock extra_head %}
+    {% block extra_head %}
+    {% endblock extra_head %}
 </head>
 <body>
 
@@ -41,13 +42,14 @@
                      <li class="nav-item me-2">
                         <a href="#" class="btn btn-outline-secondary btn-sm position-relative cart-button">
                             <i class="bi bi-cart3 fs-6"></i> {# Cart Icon #}
-                        </a>
+                            {# Optional: Badge for item count #}
+                            </a>
                     </li>
 
                     {# Authentication Links #}
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            {# CORRECTED: Use the URL name defined in urls.py #}
+                            {# Use the correct URL name for the dashboard view #}
                             <a class="nav-link" href="{% url 'dashboard_view' %}">Dashboard</a>
                         </li>
                          <li class="nav-item">
@@ -55,19 +57,22 @@
                         </li>
                         <li class="nav-item dropdown">
                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                               {{ user.email|default:user.username }}
+                               {{ user.email|default:user.username }} {# Display user email or username #}
                            </a>
                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                <li><a class="dropdown-item" href="#">Profile</a></li> {# Placeholder #}
                                <li><hr class="dropdown-divider"></li>
+                               {# Link to the logout view using its URL name #}
                                <li><a class="dropdown-item" href="{% url 'logout_page' %}">Logout</a></li>
                            </ul>
                        </li>
                     {% else %}
                         <li class="nav-item">
+                            {# Use the URL name for the standard login page view #}
                             <a class="nav-link" href="{% url 'login_page' %}">Login</a>
                         </li>
                         <li class="nav-item">
+                             {# Use the URL name for the standard register page view #}
                             <a class="btn btn-primary btn-sm ms-2" href="{% url 'register_page' %}">Register</a>
                         </li>
                     {% endif %}
@@ -77,15 +82,27 @@
     </nav>
 
     <main id="main-content">
-        {# ... (Messages block) ... #}
-        {% block content %}{% endblock content %}
+        {# Display Django messages framework messages if used #}
+        {% if messages %}
+            <div class="container mt-3"> {# Add container for messages #}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# Where page-specific content will be injected #}
+        {% block content %}
+        {% endblock content %}
     </main>
 
-    {# ... Footer ... #}
-     <footer class="footer"> {# Added footer class #}
+    <footer class="footer">
         <div class="container text-center">
-             {# UPDATED FOOTER CONTENT #}
              <div class="mb-3 footer-social-links">
+                {# Add target="_blank" and rel="noopener noreferrer" for external links #}
                 <a href="mailto:info@example.com" class="footer-icon-link" aria-label="Email us"> {# <-- Update Email #}
                     <i class="bi bi-envelope-fill"></i>
                 </a>
@@ -98,16 +115,22 @@
                 <a href="#" target="_blank" rel="noopener noreferrer" class="footer-icon-link" aria-label="Visit our LinkedIn"> {# <-- Add/Update LinkedIn URL #}
                      <i class="bi bi-linkedin"></i>
                 </a>
+                {# Add more links as needed #}
              </div>
             <span class="text-muted-color small">© {% now "Y" %} AI Agent Marketplace - ENIGMA Project. All Rights Reserved.</span>
-        </div>
+            {# Optional: Add links to Privacy Policy, Terms of Service #}
+            </div>
     </footer>
 
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
     <script src="{% static 'js/script.js' %}"></script>
-    {% block extra_scripts %}{% endblock extra_scripts %}
+
+    {# Block for page-specific JavaScript #}
+    {% block extra_scripts %}
+    {% endblock extra_scripts %}
 
 </body>
 </html>
